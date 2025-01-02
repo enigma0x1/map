@@ -3,7 +3,7 @@
   import 'leaflet/dist/leaflet.css';
   import { fade, slide } from 'svelte/transition';
   // Veri setlerini içe aktar
-  import { categories, membershipData, countryInfo } from './data.js';
+  import { categories, membershipData, countryInfo } from './lib/data.js';
   import CountryPopup from './components/CountryPopup.svelte';
   // Değişkenler
   let map;
@@ -281,10 +281,19 @@
     </div>
   {/if}
   {#if isSidebarOpen}
-    <div class="sidebar-backdrop" on:click={toggleSidebar} transition:fade={{duration: 200}}>
-      <div class="sidebar" 
-           transition:slide={{duration: 300, axis: 'x'}} 
-           on:click|stopPropagation>
+    <div 
+      class="sidebar-backdrop" 
+      on:click={toggleSidebar} 
+      on:keydown={(e) => e.key === 'Escape' && toggleSidebar()}
+      role="button"
+      tabindex="0"
+      transition:fade={{duration: 200}}
+    >
+      <div 
+        class="sidebar"
+        transition:slide={{duration: 300, axis: 'x'}}
+        on:click|stopPropagation
+      >
         <div class="sidebar-header">
           <h2>Menu</h2>
           <button class="close-btn" on:click={toggleSidebar}>&times;</button>
