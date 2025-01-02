@@ -3,6 +3,7 @@
   import 'leaflet/dist/leaflet.css';
   import { fade, slide } from 'svelte/transition';
   import { countryInfo } from './lib/countryData';
+
   let map;
   let mapElement;
   let selectedCountry = null;
@@ -13,7 +14,48 @@
   let tooltipVisible = false;
   let mapInitialized = false;
   let lastClickTime = 0;
+  let activeAlliance = null;
+
   const DOUBLE_CLICK_THRESHOLD = 300;
+
+  const categories = {
+    military: {
+      label: "Military Alliances",
+      alliances: [
+        { id: "NATO", name: "NATO", color: "#4C6EF5", desc: "North Atlantic Treaty Organization" },
+        { id: "CSTO", name: "CSTO", color: "#FA5252", desc: "Collective Security Treaty Organization" },
+        { id: "SCO", name: "SCO", color: "#12B886", desc: "Shanghai Cooperation Organisation" }
+      ]
+    },
+    economic: {
+      label: "Economic Organizations",
+      alliances: [
+        { id: "G7", name: "G7", color: "#40C057", desc: "Group of Seven" },
+        { id: "G20", name: "G20", color: "#F59F00", desc: "Group of Twenty" },
+        { id: "BRICS", name: "BRICS", color: "#228BE6", desc: "Brazil, Russia, India, China, South Africa" },
+        { id: "EU", name: "EU", color: "#7950F2", desc: "European Union" }
+      ]
+    }
+  };
+
+  const membershipData = {
+    NATO: [
+      "United States of America", "United Kingdom", "Turkey", "Spain", "Portugal", 
+      "Norway", "Netherlands", "Luxembourg", "Italy", "Iceland", "Greece", 
+      "Germany", "France", "Denmark", "Canada", "Belgium", "Poland", "Hungary", 
+      "Czech Republic", "Bulgaria", "Estonia", "Latvia", "Lithuania", "Romania", 
+      "Slovakia", "Slovenia", "Albania", "Croatia", "Montenegro", "North Macedonia"
+    ],
+    BRICS: [
+      "Brazil", "Russia", "India", "China", "South Africa", "Iran", "Saudi Arabia",
+      "Ethiopia", "Egypt", "Argentina", "United Arab Emirates"
+    ],
+    G7: [
+      "United States of America", "United Kingdom", "Japan", "Italy", "Germany", 
+      "France", "Canada"
+    ]
+  };
+
   const mapOptions = {
     center: [20, 0],
     zoom: 2,
@@ -30,13 +72,15 @@
     markerZoomAnimation: false,
     preferCanvas: true
   };
+
   const getBaseStyle = () => ({
     fillColor: 'transparent',
     fillOpacity: 0,
-    color: '#2c3e50',  // Koyu gri-mavi tonu
-    opacity: 0.6,      // Orta seviye opaklık
-    weight: 1.2        // Biraz daha kalın sınır
+    color: '#2c3e50',
+    opacity: 0.6,
+    weight: 1.2
   });
+
   const getHighlightStyle = () => ({
     fillColor: '#2ecc71',
     weight: 2,
@@ -46,6 +90,7 @@
     fillOpacity: 0.7,
     className: 'country-highlight'
   });
+
   const getSelectedStyle = () => ({
     fillColor: '#e74c3c',
     weight: 2,
@@ -55,6 +100,7 @@
     fillOpacity: 0.7,
     className: 'country-selected'
   });
+
   const handleCountryClick = async (e, feature, layer) => {
     isLoading = true;
     const currentTime = Date.now();
@@ -86,6 +132,7 @@
       isLoading = false;
     }
   };
+
   const handleMouseOver = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -97,6 +144,7 @@
       }).openTooltip();
     }
   };
+
   const handleMouseOut = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -104,6 +152,7 @@
     }
     layer.closeTooltip();
   };
+
   const initializeMap = async () => {
     if (mapInitialized) return;
     const L = await import('leaflet');
@@ -131,6 +180,40 @@
       console.error('Error initializing map:', error);
     }
   };
+
+  function highlightCountries(allianceId) {
+    if (!geoJsonLayer) return;
+
+    geoJsonLayer.eachLayer(layer => {
+      const countryName = layer.feature.properties.name;
+      
+      if (allianceId && membershipData[allianceId]?.includes(countryName)) {
+        const alliance = Object.values(categories)
+          .flatMap(cat => cat.alliances)
+          .find(a => a.id === allianceId);
+        layer.setStyle({
+          fillColor: alliance.color,
+          fillOpacity: 0.7,
+          color: '#fff',
+          weight: 1,
+          opacity: 1
+        });
+      } else {
+        layer.setStyle(getBaseStyle());
+      }
+    });
+  }
+
+  function handleAllianceClick(alliance) {
+    if (activeAlliance === alliance.id) {
+      activeAlliance = null;
+      highlightCountries(null);
+    } else {
+      activeAlliance = alliance.id;
+      highlightCountries(alliance.id);
+    }
+  }
+
   const closePopup = () => {
     if (currentLayer) {
       currentLayer.setStyle(getBaseStyle());
@@ -142,9 +225,11 @@
       easeLinearity: 0.25
     });
   };
+
   onMount(async () => {
     await initializeMap();
   });
+
   onDestroy(() => {
     if (map) {
       map.remove();
@@ -152,11 +237,53 @@
     }
   });
 </script>
+
 <svelte:head>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </svelte:head>
+
 <main>
   <div class="map" bind:this={mapElement}></div>
+
+  <div class="alliance-box">
+    <div class="box-header">
+      <h2>Global Organizations</h2>
+      {#if activeAlliance}
+        <button class="reset-btn" on:click={() => {
+          activeAlliance = null;
+          highlightCountries(null);
+        }}>
+          <span class="reset-icon">↺</span>
+          Reset
+        </button>
+      {/if}
+    </div>
+
+    <div class="alliance-content">
+      <div class="alliance-buttons">
+        {#each Object.entries(categories) as [key, category]}
+          <div class="category-section">
+            <h3>{category.label}</h3>
+            {#each category.alliances as alliance}
+              <button
+                class="alliance-btn"
+                class:active={activeAlliance === alliance.id}
+                style="--alliance-color: {alliance.color}"
+                on:click={() => handleAllianceClick(alliance)}
+              >
+                <div class="alliance-info">
+                  <span class="alliance-dot" style="background: {alliance.color}"></span>
+                  <span class="alliance-name">{alliance.name}</span>
+                </div>
+                <span class="alliance-desc">{alliance.desc}</span>
+              </button>
+            {/each}
+          </div>
+        {/each}
+      </div>
+    </div>
+  </div>
+
   {#if selectedCountry}
     <div class="popup" transition:slide>
       <div class="popup-header">
@@ -254,12 +381,14 @@
       </div>
     </div>
   {/if}
+
   {#if isLoading}
     <div class="loader" transition:fade>
       <div class="spinner"></div>
     </div>
   {/if}
 </main>
+
 <style>
   /* Genel stil güncellemeleri */
   :global(body) {
@@ -490,15 +619,136 @@
     .president-info {
       flex-direction: column;
       align-items: center;
-      text-align: center;
     }
     .president-image {
       width: 100px;
-      height: 130px;
+      height: 120px;
     }
-    .tab {
-      padding: 8px 16px;
-      font-size: 13px;
+    .alliance-box {
+      width: 90%;
+      left: 50%;
+      transform: translateX(-50%);
+      max-height: 50vh;
     }
+  }
+
+  .alliance-box {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 380px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    z-index: 1000;
+  }
+
+  .box-header {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .box-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: none;
+    background: #f1f3f5;
+    color: #495057;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    background: #e9ecef;
+  }
+
+  .alliance-content {
+    padding: 16px;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+
+  .category-section {
+    margin-bottom: 24px;
+  }
+
+  .category-section h3 {
+    font-size: 14px;
+    color: #868e96;
+    margin: 0 0 12px 0;
+    font-weight: 500;
+  }
+
+  .alliance-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .alliance-btn {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    background: white;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .alliance-btn:hover {
+    border-color: var(--alliance-color);
+    background: rgba(var(--alliance-color), 0.05);
+  }
+
+  .alliance-btn.active {
+    background: var(--alliance-color);
+    border-color: var(--alliance-color);
+    color: white;
+  }
+
+  .alliance-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .alliance-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .alliance-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .alliance-desc {
+    font-size: 12px;
+    color: #868e96;
+  }
+
+  .alliance-btn.active .alliance-desc {
+    color: rgba(255, 255, 255, 0.8);
   }
 </style>
