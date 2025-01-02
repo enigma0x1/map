@@ -1,104 +1,6 @@
-// src/lib/countryData.ts
+// src/lib/countryData.js
 
-// Tip tanımlamaları
-export interface TimelineEvent {
-  year: number;
-  event: string;
-  category: 'political' | 'economic' | 'military' | 'social';
-  description?: string;
-}
-
-export interface EconomicData {
-  year: number;
-  gdp: number;
-  growth: number;
-  inflation: number;
-}
-
-export interface CountryData {
-  flag: string;
-  alliances: string[];
-  president: {
-    name: string;
-    image: string;
-    bio: string;
-  };
-  general: {
-    population: string;
-    capital: string;
-    region: string;
-    language: string;
-    currency: string;
-    alliance: string;
-  };
-  demographics: {
-    ageStructure: {
-      under15: string;
-      age15to64: string;
-      over65: string;
-    };
-    urbanization: string;
-    literacyRate: string;
-    languages: string[];
-    ethnicGroups: string[];
-    religions: Record<string, string>;
-  };
-  economy: {
-    gdp: string;
-    gdpRank: string;
-    gdpGrowth: string;
-    majorSectors: string[];
-  };
-  trade: {
-    tradingPartners: string[];
-    mainExports: string[];
-    mainImports: string[];
-  };
-  military: {
-    rank: string;
-    overview: string;
-    personnel: {
-      active: string;
-      reserve: string;
-    };
-    equipment: {
-      aircraft: string;
-      navalAssets: string;
-    };
-    budget: string;
-    capabilities: string;
-  };
-  geography: {
-    area: string;
-    coastline: string;
-    climate: string;
-    terrain: string[];
-    naturalResources: string[];
-    environmentalIssues: string[];
-  };
-  innovation: {
-    patents: string;
-    startupEcosystem: string;
-    rAndDSpending: string;
-  };
-  education: {
-    universities: string;
-    studentPopulation: string;
-    researchOutput: string;
-  };
-  timeline: TimelineEvent[];
-  economicData: {
-    gdpTrend: EconomicData[];
-    keyIndicators: {
-      exportValue: string;
-      importValue: string;
-      foreignInvestment: string;
-      unemployment: string;
-    };
-  };
-}
-
-export const countryInfo: Record<string, CountryData> = {
+export const countryInfo = {
   "Turkey": {
     flag: "https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
     alliances: ["NATO", "G20", "UN"],
@@ -379,7 +281,7 @@ export const comparisonCategories = {
 };
 
 // Karşılaştırma verilerini getiren fonksiyon
-export function getComparisonData(country1: string, country2: string, category: string) {
+export function getComparisonData(country1, country2, category) {
   const data1 = countryInfo[country1];
   const data2 = countryInfo[country2];
   
@@ -428,7 +330,6 @@ export function getComparisonData(country1: string, country2: string, category: 
           }
         ]
       };
-    // Diğer kategoriler için benzer karşılaştırmalar eklenebilir
     default:
       return null;
   }
