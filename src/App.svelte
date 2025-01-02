@@ -37,10 +37,10 @@
   };
   const membershipData = {
     NATO: [
-      "United States of America", "United Kingdom", "Turkey", "Spain", "Portugal", 
-      "Norway", "Netherlands", "Luxembourg", "Italy", "Iceland", "Greece", 
-      "Germany", "France", "Denmark", "Canada", "Belgium", "Poland", "Hungary", 
-      "Czech Republic", "Bulgaria", "Estonia", "Latvia", "Lithuania", "Romania", 
+      "United States of America", "United Kingdom", "Turkey", "Spain", "Portugal",
+      "Norway", "Netherlands", "Luxembourg", "Italy", "Iceland", "Greece",
+      "Germany", "France", "Denmark", "Canada", "Belgium", "Poland", "Hungary",
+      "Czech Republic", "Bulgaria", "Estonia", "Latvia", "Lithuania", "Romania",
       "Slovakia", "Slovenia", "Albania", "Croatia", "Montenegro", "North Macedonia"
     ],
     BRICS: [
@@ -48,7 +48,7 @@
       "Ethiopia", "Egypt", "Argentina", "United Arab Emirates"
     ],
     G7: [
-      "United States of America", "United Kingdom", "Japan", "Italy", "Germany", 
+      "United States of America", "United Kingdom", "Japan", "Italy", "Germany",
       "France", "Canada"
     ]
   };
@@ -106,11 +106,18 @@
       }
     }
   };
+
+  let isAnimating = false;
+
   const handleCountryClick = async (e, feature, layer) => {
+    if (isAnimating) return;
+    isAnimating = true;
     isLoading = true;
     const currentTime = Date.now();
     const countryName = feature.properties.name;
     if (currentTime - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
+      isAnimating = false;
+      isLoading = false;
       return;
     }
     lastClickTime = currentTime;
@@ -120,7 +127,7 @@
       }
       const info = countryInfo[countryName];
       if (info) {
-        selectedCountry = { name: countryName, data: info };
+        selectedCountry = { name: countryName, data: info, layer };
         activeTab = 'Details';
         currentLayer = layer;
         layer.setStyle(getSelectedStyle());
@@ -135,6 +142,7 @@
       console.error('Error handling country click:', error);
     } finally {
       isLoading = false;
+      isAnimating = false;
     }
   };
   const handleMouseOver = (e, feature, layer) => {
@@ -155,12 +163,11 @@
     }
     layer.closeTooltip();
   };
-  let labelLayer;
   const initializeMap = async () => {
     if (mapInitialized) return;
     const L = await import('leaflet');
     map = L.map(mapElement, mapOptions);
-    
+
     // Retro base map
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 18,
@@ -168,34 +175,16 @@
       className: 'retro-map-tiles'
     }).addTo(map);
 
-    // Etiketler için özel katman
-    const labelTileLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      className: 'retro-labels',
-      opacity: 0.7
-    }).addTo(map);
+    // Canvas renderer
+    const canvasRenderer = L.canvas();
 
-    // Deniz isimleri için özel katman
-    const waterLabelLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      className: 'retro-water-labels',
-      opacity: 0.6
-    }).addTo(map);
     try {
       const response = await fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json');
       const data = await response.json();
       geoJsonLayer = L.geoJSON(data, {
         style: getBaseStyle,
+        renderer: canvasRenderer,
         onEachFeature: (feature, layer) => {
-          // Ülke isimlerini ekleyelim
-          const center = layer.getBounds().getCenter();
-          L.marker(center, {
-            icon: L.divIcon({
-              className: 'country-label',
-              html: `<div>${feature.properties.name}</div>`
-            })
-          }).addTo(map);
-
           layer.on({
             mouseover: (e) => handleMouseOver(e, feature, layer),
             mouseout: (e) => handleMouseOut(e, feature, layer),
@@ -208,12 +197,16 @@
       console.error('Error initializing map:', error);
     }
     addContinentLabels();
+    // Özel attribution ekleme
+    L.control.attribution({
+      prefix: false,
+      position: 'bottomright'
+    }).addAttribution('Created by Fatih Emre Aksoy').addTo(map);
   };
   function highlightCountries(allianceId) {
     if (!geoJsonLayer) return;
     geoJsonLayer.eachLayer(layer => {
       const countryName = layer.feature.properties.name;
-      
       if (allianceId && membershipData[allianceId]?.includes(countryName)) {
         const alliance = Object.values(categories)
           .flatMap(cat => cat.alliances)
@@ -262,7 +255,6 @@
       { name: 'ASIA', coords: [45, 90] },
       { name: 'OCEANIA', coords: [-25, 135] }
     ];
-
     continents.forEach(continent => {
       L.marker(continent.coords, {
         icon: L.divIcon({
@@ -282,6 +274,7 @@
     }
   });
 </script>
+
 <svelte:head>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </svelte:head>
@@ -558,31 +551,6 @@
     box-shadow: 3px 3px 0 rgba(139, 69, 19, 0.3) !important;
   }
 
-  /* Retro label stilleri */
-  :global(.retro-labels) {
-    filter: sepia(100%) hue-rotate(5deg) opacity(0.7);
-  }
-
-  :global(.retro-water-labels) {
-    filter: sepia(100%) hue-rotate(190deg) opacity(0.6);
-  }
-
-  :global(.country-label) {
-    background: transparent;
-    border: none;
-    font-family: 'Courier New', monospace;
-    color: #5C2E0E;
-    font-weight: bold;
-    font-size: 12px;
-    text-shadow: 
-      2px 2px 2px #F5E6D3,
-      -2px -2px 2px #F5E6D3,
-      2px -2px 2px #F5E6D3,
-      -2px 2px 2px #F5E6D3;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
   /* Kıta isimleri için özel stil */
   :global(.continent-label) {
     font-family: 'Courier New', monospace;
@@ -591,24 +559,27 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 2px;
-    text-shadow: 
+    text-shadow:
       3px 3px 3px #F5E6D3,
       -3px -3px 3px #F5E6D3,
       3px -3px 3px #F5E6D3,
       -3px 3px 3px #F5E6D3;
     opacity: 0.7;
   }
+
   main {
     position: relative;
     width: 100%;
     height: 100vh;
   }
+
   .map {
     width: 100%;
     height: 100vh;
     padding-top: 48px;
     z-index: 1;
   }
+
   /* Loader stil güncellemeleri */
   .loader {
     position: absolute;
@@ -619,9 +590,10 @@
     backdrop-filter: blur(10px);
     padding: 20px;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     z-index: 1000;
   }
+
   .spinner {
     width: 30px;
     height: 30px;
@@ -630,8 +602,14 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
   }
 </style>
