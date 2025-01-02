@@ -30,13 +30,11 @@
   };
 
   const getBaseStyle = () => ({
-    fillColor: '#3498db',
-    weight: 1,
-    opacity: 1,
-    color: 'white',
-    dashArray: '',
-    fillOpacity: 0.5,
-    className: 'country-base'
+    fillColor: 'transparent',
+    fillOpacity: 0,
+    color: '#2c3e50',  // Koyu gri-mavi tonu
+    opacity: 0.6,      // Orta seviye opaklık
+    weight: 1.2        // Biraz daha kalın sınır
   });
 
   const getHighlightStyle = () => ({
