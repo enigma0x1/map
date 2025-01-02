@@ -15,7 +15,9 @@
   let lastClickTime = 0;
   let activeAlliance = null;
   let currentTheme = 'retro';
+
   const DOUBLE_CLICK_THRESHOLD = 300;
+
   const categories = {
     military: {
       label: "Military Alliances",
@@ -35,6 +37,7 @@
       ]
     }
   };
+
   const membershipData = {
     NATO: [
       "United States of America", "United Kingdom", "Turkey", "Spain", "Portugal",
@@ -52,6 +55,7 @@
       "France", "Canada"
     ]
   };
+
   const mapOptions = {
     center: [20, 0],
     zoom: 2,
@@ -69,6 +73,7 @@
     markerZoomAnimation: false,
     preferCanvas: true
   };
+
   const getBaseStyle = () => ({
     fillColor: 'transparent',
     fillOpacity: 0,
@@ -76,6 +81,7 @@
     opacity: 0.6,
     weight: 1.2
   });
+
   const getHighlightStyle = () => ({
     fillColor: '#A0522D',
     weight: 2,
@@ -85,14 +91,16 @@
     fillOpacity: 0.7,
     className: 'country-highlight'
   });
+
   const getSelectedStyle = () => ({
-    fillColor: 'transparent', // İçi dolu olmasın
+    fillColor: 'transparent',
     weight: 2,
     opacity: 1,
     color: '#FFF8EB',
-    fillOpacity: 0, // Tamamen şeffaf
-    className: 'country-pop' // CSS animasyon için ek sınıf
+    fillOpacity: 0,
+    className: 'country-pop'
   });
+
   const themeOptions = {
     retro: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
@@ -112,26 +120,33 @@
     if (isAnimating) return;
     isAnimating = true;
     isLoading = true;
+
     const currentTime = Date.now();
     const countryName = feature.properties.name;
+
     if (currentTime - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
       isAnimating = false;
       isLoading = false;
       return;
     }
+
     lastClickTime = currentTime;
+
     try {
       if (currentLayer) {
         currentLayer.setStyle(getBaseStyle());
       }
+
       const info = countryInfo[countryName];
       if (info) {
         selectedCountry = { name: countryName, data: info, layer };
         activeTab = 'Details';
         currentLayer = layer;
         layer.setStyle(getSelectedStyle());
+
         const bounds = layer.getBounds();
         const center = bounds.getCenter();
+
         await map.flyTo(center, 4, {
           duration: 1,
           easeLinearity: 0.25
@@ -144,6 +159,7 @@
       isAnimating = false;
     }
   };
+
   const handleMouseOver = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -155,6 +171,7 @@
       }).openTooltip();
     }
   };
+
   const handleMouseOut = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -162,6 +179,7 @@
     }
     layer.closeTooltip();
   };
+
   const initializeMap = async () => {
     if (mapInitialized) return;
     const L = await import('leaflet');
@@ -180,6 +198,7 @@
     try {
       const response = await fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json');
       const data = await response.json();
+
       geoJsonLayer = L.geoJSON(data, {
         style: getBaseStyle,
         renderer: canvasRenderer,
@@ -191,17 +210,21 @@
           });
         }
       }).addTo(map);
+
       mapInitialized = true;
     } catch (error) {
       console.error('Error initializing map:', error);
     }
+
     addContinentLabels();
+
     // Özel attribution ekleme
     L.control.attribution({
       prefix: false,
       position: 'bottomright'
     }).addAttribution('Created by Fatih Emre Aksoy').addTo(map);
   };
+
   function highlightCountries(allianceId) {
     if (!geoJsonLayer) return;
     geoJsonLayer.eachLayer(layer => {
@@ -222,6 +245,7 @@
       }
     });
   }
+
   function handleAllianceClick(alliance) {
     if (activeAlliance === alliance.id) {
       activeAlliance = null;
@@ -231,6 +255,7 @@
       highlightCountries(alliance.id);
     }
   }
+
   const closePopup = () => {
     if (currentLayer) {
       currentLayer.setStyle(getBaseStyle());
@@ -242,9 +267,11 @@
       easeLinearity: 0.25
     });
   };
+
   function handleThemeChange(theme) {
     currentTheme = theme;
   }
+
   const addContinentLabels = () => {
     const continents = [
       { name: 'NORTH AMERICA', coords: [45, -100] },
@@ -254,6 +281,7 @@
       { name: 'ASIA', coords: [45, 90] },
       { name: 'OCEANIA', coords: [-25, 135] }
     ];
+
     continents.forEach(continent => {
       L.marker(continent.coords, {
         icon: L.divIcon({
@@ -263,9 +291,11 @@
       }).addTo(map);
     });
   };
+
   onMount(async () => {
     await initializeMap();
   });
+
   onDestroy(() => {
     if (map) {
       map.remove();
@@ -277,6 +307,7 @@
 <svelte:head>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </svelte:head>
+
 <nav class="retro-nav" data-theme="retro">
   <div class="compass">🧭</div>
   {#each Object.entries(categories) as [key, category]}
@@ -293,6 +324,7 @@
     {/each}
   {/each}
 </nav>
+
 <main>
   <div class="map" bind:this={mapElement}></div>
   {#if selectedCountry}
@@ -370,11 +402,12 @@
     </div>
   {/if}
 </main>
+
 <style>
   /* Genel Retro Stili */
   :global(body) {
-    font-family: 'Courier New', monospace;
-    background: #F5E6D3;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #FAFAFA;
   }
 
   /* Retro Navigation */
@@ -384,13 +417,14 @@
     left: 0;
     right: 0;
     height: 48px;
-    background: #F5E6D3;
-    border-bottom: 2px solid #8B4513;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(139, 69, 19, 0.2);
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 0 20px;
-    box-shadow: 0 2px 4px rgba(139, 69, 19, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
   }
 
@@ -404,27 +438,28 @@
     align-items: center;
     gap: 8px;
     padding: 6px 16px;
-    border: 2px solid #8B4513;
-    background: #FFF8EB;
+    border-radius: 6px;
+    border: 1px solid rgba(139, 69, 19, 0.3);
+    background: white;
     color: #8B4513;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 2px 2px 0 #8B4513;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
   .retro-btn:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 3px 3px 0 #8B4513;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   }
 
   .retro-btn.active {
     background: #8B4513;
     color: #FFF8EB;
-    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.3);
-    transform: translate(1px, 1px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(1px);
   }
 
   /* Retro Popup */
@@ -433,9 +468,11 @@
     top: 60px;
     right: 20px;
     width: 400px;
-    background: #F5E6D3;
-    border: 2px solid #8B4513;
-    box-shadow: 4px 4px 0 rgba(139, 69, 19, 0.3);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(139, 69, 19, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     z-index: 1000;
   }
 
@@ -446,13 +483,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #8B4513;
+    border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+    border-radius: 12px 12px 0 0;
   }
 
   .retro-header h3 {
     margin: 0;
-    font-family: 'Courier New', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 18px;
+    font-weight: 600;
   }
 
   .retro-close {
@@ -474,12 +513,13 @@
   .retro-tab {
     padding: 8px 16px;
     background: #F5E6D3;
-    border: 2px solid #8B4513;
+    border: 1px solid rgba(139, 69, 19, 0.3);
+    border-radius: 4px;
     color: #8B4513;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
   }
 
   .retro-tab:hover {
@@ -495,18 +535,25 @@
   .retro-content {
     padding: 20px;
     background: url('paper-texture.png');
-    border-top: 2px solid #8B4513;
+    border-top: 1px solid rgba(139, 69, 19, 0.2);
   }
 
   .retro-info-item {
     margin-bottom: 16px;
-    padding: 12px;
-    border: 1px solid #8B4513;
-    background: rgba(255, 248, 235, 0.7);
+    padding: 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(139, 69, 19, 0.15);
+    transition: all 0.2s ease;
+  }
+
+  .retro-info-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   .retro-label {
-    font-weight: bold;
+    font-weight: 600;
     color: #8B4513;
     margin-bottom: 4px;
   }
@@ -532,37 +579,37 @@
 
   /* Retro Map Overlay */
   :global(.leaflet-control-zoom) {
-    border: 2px solid #8B4513 !important;
-    box-shadow: 3px 3px 0 rgba(139, 69, 19, 0.3) !important;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(139, 69, 19, 0.2) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   }
 
   :global(.leaflet-control-zoom a) {
-    background: #F5E6D3 !important;
+    background: rgba(255, 255, 255, 0.9) !important;
     color: #8B4513 !important;
-    border-color: #8B4513 !important;
+    border-color: rgba(139, 69, 19, 0.2) !important;
   }
 
   :global(.leaflet-tooltip) {
-    background: #F5E6D3 !important;
-    border: 2px solid #8B4513 !important;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(139, 69, 19, 0.2) !important;
     color: #8B4513 !important;
-    font-family: 'Courier New', monospace !important;
-    box-shadow: 3px 3px 0 rgba(139, 69, 19, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   }
 
   /* Kıta isimleri için özel stil */
   :global(.continent-label) {
-    font-family: 'Courier New', monospace;
-    color: #8B4513;
+    font-family: 'Inter', sans-serif;
+    color: rgba(139, 69, 19, 0.7);
     font-size: 24px;
-    font-weight: bold;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 2px;
-    text-shadow:
-      3px 3px 3px #F5E6D3,
-      -3px -3px 3px #F5E6D3,
-      3px -3px 3px #F5E6D3,
-      -3px 3px 3px #F5E6D3;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
     opacity: 0.7;
   }
 
@@ -585,11 +632,11 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     z-index: 1000;
   }
 
