@@ -86,13 +86,12 @@
     className: 'country-highlight'
   });
   const getSelectedStyle = () => ({
-    fillColor: '#8B4513',
+    fillColor: 'transparent', // İçi dolu olmasın
     weight: 2,
     opacity: 1,
     color: '#FFF8EB',
-    dashArray: '',
-    fillOpacity: 0.7,
-    className: 'country-selected'
+    fillOpacity: 0, // Tamamen şeffaf
+    className: 'country-pop' // CSS animasyon için ek sınıf
   });
   const themeOptions = {
     retro: {
@@ -607,9 +606,34 @@
     0% {
       transform: rotate(0deg);
     }
-
     100% {
       transform: rotate(360deg);
+    }
+  }
+
+  /* Sınır çizgisini pop-up şeklinde büyütmek için transform animasyonu */
+  .country-pop {
+    /* Animasyonun adı ve süresi */
+    animation: pop-scale 0.5s ease-in-out forwards;
+    /* transform-box ve transform-origin ayarları,
+       SVG path'i kendi merkezinden ölçeklemeye yarar. */
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* Keyframes: 0% -> normal, 50% -> yaklaşık %10 büyüt, 100% -> normale dön */
+  @keyframes pop-scale {
+    0% {
+      transform: scale(1);
+      stroke-width: 2; /* İlk anda stroke kalınlığı */
+    }
+    50% {
+      transform: scale(1.1);
+      stroke-width: 3; /* Tepede biraz daha kalın görünebilir */
+    }
+    100% {
+      transform: scale(1);
+      stroke-width: 2;
     }
   }
 </style>
