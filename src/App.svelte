@@ -7,18 +7,15 @@
   let map;
   let mapElement;
   let selectedCountry = null;
-  let activeTab = 'president';
+  let activeTab = 'Details';
   let isLoading = false;
   let currentLayer = null;
   let geoJsonLayer = null;
-  let tooltipVisible = false;
   let mapInitialized = false;
   let lastClickTime = 0;
   let activeAlliance = null;
-  let currentTheme = 'light';
-
+  let currentTheme = 'retro';
   const DOUBLE_CLICK_THRESHOLD = 300;
-
   const categories = {
     military: {
       label: "Military Alliances",
@@ -38,7 +35,6 @@
       ]
     }
   };
-
   const membershipData = {
     NATO: [
       "United States of America", "United Kingdom", "Turkey", "Spain", "Portugal", 
@@ -56,13 +52,13 @@
       "France", "Canada"
     ]
   };
-
   const mapOptions = {
     center: [20, 0],
     zoom: 2,
     minZoom: 2,
     maxZoom: 8,
     zoomControl: true,
+    attributionControl: false,
     maxBounds: [
       [-90, -180],
       [90, 180]
@@ -73,58 +69,43 @@
     markerZoomAnimation: false,
     preferCanvas: true
   };
-
   const getBaseStyle = () => ({
     fillColor: 'transparent',
     fillOpacity: 0,
-    color: '#2c3e50',
+    color: '#5C2E0E',
     opacity: 0.6,
     weight: 1.2
   });
-
   const getHighlightStyle = () => ({
-    fillColor: '#2ecc71',
+    fillColor: '#A0522D',
     weight: 2,
     opacity: 1,
-    color: 'white',
+    color: '#FFF8EB',
     dashArray: '',
     fillOpacity: 0.7,
     className: 'country-highlight'
   });
-
   const getSelectedStyle = () => ({
-    fillColor: '#e74c3c',
+    fillColor: '#8B4513',
     weight: 2,
     opacity: 1,
-    color: 'white',
+    color: '#FFF8EB',
     dashArray: '',
     fillOpacity: 0.7,
     className: 'country-selected'
   });
-
   const themeOptions = {
-    light: {
-      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-      attribution: '©OpenStreetMap, ©CartoDB'
-    },
-    vintage: {
-      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg',
-      attribution: 'Map tiles by Stamen Design'
-    },
-    dark: {
-      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-      attribution: '©OpenStreetMap, ©CartoDB'
-    },
-    watercolor: {
-      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
-      attribution: 'Map tiles by Stamen Design'
-    },
     retro: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
-      attribution: 'Tiles &copy; Esri'
+      attribution: 'Tiles &copy; Esri',
+      options: {
+        maxZoom: 18,
+        tileSize: 512,
+        zoomOffset: -1,
+        className: 'retro-map-tiles'
+      }
     }
   };
-
   const handleCountryClick = async (e, feature, layer) => {
     isLoading = true;
     const currentTime = Date.now();
@@ -140,7 +121,7 @@
       const info = countryInfo[countryName];
       if (info) {
         selectedCountry = { name: countryName, data: info };
-        activeTab = 'president';
+        activeTab = 'Details';
         currentLayer = layer;
         layer.setStyle(getSelectedStyle());
         const bounds = layer.getBounds();
@@ -156,7 +137,6 @@
       isLoading = false;
     }
   };
-
   const handleMouseOver = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -168,7 +148,6 @@
       }).openTooltip();
     }
   };
-
   const handleMouseOut = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -176,20 +155,47 @@
     }
     layer.closeTooltip();
   };
-
+  let labelLayer;
   const initializeMap = async () => {
     if (mapInitialized) return;
     const L = await import('leaflet');
     map = L.map(mapElement, mapOptions);
     
-    updateMapTheme();
+    // Retro base map
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      attribution: '&copy; Esri',
+      className: 'retro-map-tiles'
+    }).addTo(map);
 
+    // Etiketler için özel katman
+    const labelTileLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      className: 'retro-labels',
+      opacity: 0.7
+    }).addTo(map);
+
+    // Deniz isimleri için özel katman
+    const waterLabelLayer = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      className: 'retro-water-labels',
+      opacity: 0.6
+    }).addTo(map);
     try {
       const response = await fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json');
       const data = await response.json();
       geoJsonLayer = L.geoJSON(data, {
         style: getBaseStyle,
         onEachFeature: (feature, layer) => {
+          // Ülke isimlerini ekleyelim
+          const center = layer.getBounds().getCenter();
+          L.marker(center, {
+            icon: L.divIcon({
+              className: 'country-label',
+              html: `<div>${feature.properties.name}</div>`
+            })
+          }).addTo(map);
+
           layer.on({
             mouseover: (e) => handleMouseOver(e, feature, layer),
             mouseout: (e) => handleMouseOut(e, feature, layer),
@@ -201,26 +207,10 @@
     } catch (error) {
       console.error('Error initializing map:', error);
     }
+    addContinentLabels();
   };
-
-  function updateMapTheme() {
-    if (!map) return;
-    map.eachLayer(layer => {
-      if (layer instanceof L.TileLayer) {
-        map.removeLayer(layer);
-      }
-    });
-    const theme = themeOptions[currentTheme];
-    L.tileLayer(theme.url, {
-      attribution: theme.attribution,
-      subdomains: 'abcd',
-      maxZoom: 20
-    }).addTo(map);
-  }
-
   function highlightCountries(allianceId) {
     if (!geoJsonLayer) return;
-
     geoJsonLayer.eachLayer(layer => {
       const countryName = layer.feature.properties.name;
       
@@ -231,7 +221,7 @@
         layer.setStyle({
           fillColor: alliance.color,
           fillOpacity: 0.7,
-          color: '#fff',
+          color: '#FFF8EB',
           weight: 1,
           opacity: 1
         });
@@ -240,7 +230,6 @@
       }
     });
   }
-
   function handleAllianceClick(alliance) {
     if (activeAlliance === alliance.id) {
       activeAlliance = null;
@@ -250,7 +239,6 @@
       highlightCountries(alliance.id);
     }
   }
-
   const closePopup = () => {
     if (currentLayer) {
       currentLayer.setStyle(getBaseStyle());
@@ -262,16 +250,31 @@
       easeLinearity: 0.25
     });
   };
-
   function handleThemeChange(theme) {
     currentTheme = theme;
-    updateMapTheme();
   }
+  const addContinentLabels = () => {
+    const continents = [
+      { name: 'NORTH AMERICA', coords: [45, -100] },
+      { name: 'SOUTH AMERICA', coords: [-15, -60] },
+      { name: 'EUROPE', coords: [50, 15] },
+      { name: 'AFRICA', coords: [0, 20] },
+      { name: 'ASIA', coords: [45, 90] },
+      { name: 'OCEANIA', coords: [-25, 135] }
+    ];
 
+    continents.forEach(continent => {
+      L.marker(continent.coords, {
+        icon: L.divIcon({
+          className: 'continent-label',
+          html: `<div>${continent.name}</div>`
+        })
+      }).addTo(map);
+    });
+  };
   onMount(async () => {
     await initializeMap();
   });
-
   onDestroy(() => {
     if (map) {
       map.remove();
@@ -279,334 +282,332 @@
     }
   });
 </script>
-
 <svelte:head>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </svelte:head>
-
+<nav class="retro-nav" data-theme="retro">
+  <div class="compass">🧭</div>
+  {#each Object.entries(categories) as [key, category]}
+    {#each category.alliances as alliance}
+      <button
+        class="retro-btn"
+        class:active={activeAlliance === alliance.id}
+        style="--alliance-color: {alliance.color}"
+        on:click={() => handleAllianceClick(alliance)}
+      >
+        <span class="retro-dot" style="background: {alliance.color}"></span>
+        {alliance.name}
+      </button>
+    {/each}
+  {/each}
+</nav>
 <main>
   <div class="map" bind:this={mapElement}></div>
-
-  <div class="theme-selector">
-    <button class="theme-btn" class:active={currentTheme === 'light'} on:click={() => handleThemeChange('light')}>Light</button>
-    <button class="theme-btn" class:active={currentTheme === 'vintage'} on:click={() => handleThemeChange('vintage')}>Vintage</button>
-    <button class="theme-btn" class:active={currentTheme === 'dark'} on:click={() => handleThemeChange('dark')}>Dark</button>
-    <button class="theme-btn" class:active={currentTheme === 'watercolor'} on:click={() => handleThemeChange('watercolor')}>Watercolor</button>
-    <button class="theme-btn" class:active={currentTheme === 'retro'} on:click={() => handleThemeChange('retro')}>Retro</button>
-  </div>
-
-  <div class="alliance-box">
-    <div class="box-header">
-      <h2>Global Organizations</h2>
-      {#if activeAlliance}
-        <button class="reset-btn" on:click={() => {
-          activeAlliance = null;
-          highlightCountries(null);
-        }}>
-          <span class="reset-icon">↺</span>
-          Reset
-        </button>
-      {/if}
-    </div>
-
-    <div class="alliance-content">
-      <div class="alliance-buttons">
-        {#each Object.entries(categories) as [key, category]}
-          <div class="category-section">
-            <h3>{category.label}</h3>
-            {#each category.alliances as alliance}
-              <button
-                class="alliance-btn"
-                class:active={activeAlliance === alliance.id}
-                style="--alliance-color: {alliance.color}"
-                on:click={() => handleAllianceClick(alliance)}
-              >
-                <div class="alliance-info">
-                  <span class="alliance-dot" style="background: {alliance.color}"></span>
-                  <span class="alliance-name">{alliance.name}</span>
-                </div>
-                <span class="alliance-desc">{alliance.desc}</span>
-              </button>
-            {/each}
-          </div>
-        {/each}
-      </div>
-    </div>
-  </div>
-
   {#if selectedCountry}
-    <div class="popup" transition:slide>
-      <div class="popup-header">
+    <div class="retro-popup" transition:slide data-theme="retro">
+      <div class="retro-header">
         <h3>{selectedCountry.name}</h3>
-        <button class="close-btn" on:click={closePopup}>×</button>
+        <button class="retro-close" on:click={closePopup}>×</button>
       </div>
-      <div class="tabs">
+      <div class="retro-tabs">
         <button
-          class="tab"
-          class:active={activeTab === 'president'}
-          on:click={() => activeTab = 'president'}
+          class="retro-tab"
+          class:active={activeTab === 'Details'}
+          on:click={() => activeTab = 'Details'}
         >
-          Başkan
+          Details
         </button>
         <button
-          class="tab"
-          class:active={activeTab === 'general'}
-          on:click={() => activeTab = 'general'}
+          class="retro-tab"
+          class:active={activeTab === 'Military'}
+          on:click={() => activeTab = 'Military'}
         >
-          Genel
+          Military
         </button>
         <button
-          class="tab"
-          class:active={activeTab === 'military'}
-          on:click={() => activeTab = 'military'}
+          class="retro-tab"
+          class:active={activeTab === 'Economy'}
+          on:click={() => activeTab = 'Economy'}
         >
-          Askeri
+          Economy
         </button>
       </div>
-      <div class="tab-content">
-        {#if activeTab === 'president'}
-          <div class="president-info" transition:fade>
-            <img
-              src={selectedCountry.data.president.image}
-              alt={selectedCountry.data.president.name}
-              class="president-image"
-              on:error={(e) => e.target.src = 'default-president.jpg'}
-            >
-            <div class="president-details">
-              <div class="president-name">{selectedCountry.data.president.name}</div>
-              <div class="president-bio">{selectedCountry.data.president.bio}</div>
-            </div>
+      <div class="retro-content">
+        {#if activeTab === 'Details'}
+          <div class="retro-info-item">
+            <div class="retro-label">Population</div>
+            <div class="retro-value">{selectedCountry.data.general.population}</div>
           </div>
-        {:else if activeTab === 'general'}
-          <div class="general-info" transition:fade>
-            <div class="info-grid">
-              <div class="info-item">
-                <div class="info-label">Nüfus</div>
-                <div class="info-value">{selectedCountry.data.general.population}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Başkent</div>
-                <div class="info-value">{selectedCountry.data.general.capital}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">İttifak</div>
-                <div class="info-value">{selectedCountry.data.general.alliance}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">GSYİH</div>
-                <div class="info-value">{selectedCountry.data.general.gdp}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Ekonomi</div>
-                <div class="info-value">{selectedCountry.data.general.economy}</div>
-              </div>
-            </div>
+          <div class="retro-info-item">
+            <div class="retro-label">Capital</div>
+            <div class="retro-value">{selectedCountry.data.general.capital}</div>
           </div>
-        {:else}
-          <div class="military-info" transition:fade>
-            <div class="military-stats">
-              <div class="military-stat">
-                <div class="military-stat-label">Genel Bakış</div>
-                <div class="military-stat-value">{selectedCountry.data.military.overview}</div>
-              </div>
-              <div class="military-stat">
-                <div class="military-stat-label">Personel</div>
-                <div class="military-stat-value">{selectedCountry.data.military.personnel}</div>
-              </div>
-              <div class="military-stat">
-                <div class="military-stat-label">Ekipman</div>
-                <div class="military-stat-value">{selectedCountry.data.military.equipment}</div>
-              </div>
-              <div class="military-stat">
-                <div class="military-stat-label">Bütçe</div>
-                <div class="military-stat-value">{selectedCountry.data.military.budget}</div>
-              </div>
-              <div class="military-stat">
-                <div class="military-stat-label">Yetenekler</div>
-                <div class="military-stat-value">{selectedCountry.data.military.capabilities}</div>
-              </div>
-            </div>
+          <div class="retro-info-item">
+            <div class="retro-label">Alliance</div>
+            <div class="retro-value">{selectedCountry.data.general.alliance}</div>
+          </div>
+        {:else if activeTab === 'Military'}
+          <div class="retro-info-item">
+            <div class="retro-label">Overview</div>
+            <div class="retro-value">{selectedCountry.data.military.overview}</div>
+          </div>
+          <div class="retro-info-item">
+            <div class="retro-label">Personnel</div>
+            <div class="retro-value">{selectedCountry.data.military.personnel}</div>
+          </div>
+          <div class="retro-info-item">
+            <div class="retro-label">Equipment</div>
+            <div class="retro-value">{selectedCountry.data.military.equipment}</div>
+          </div>
+        {:else if activeTab === 'Economy'}
+          <div class="retro-info-item">
+            <div class="retro-label">GDP</div>
+            <div class="retro-value">{selectedCountry.data.general.gdp}</div>
+          </div>
+          <div class="retro-info-item">
+            <div class="retro-label">Economy</div>
+            <div class="retro-value">{selectedCountry.data.general.economy}</div>
           </div>
         {/if}
       </div>
     </div>
   {/if}
-
   {#if isLoading}
     <div class="loader" transition:fade>
       <div class="spinner"></div>
     </div>
   {/if}
 </main>
-
 <style>
-  /* Genel stil güncellemeleri */
+  /* Genel Retro Stili */
   :global(body) {
-    margin: 0;
-    padding: 0;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #f5f7fa;
+    font-family: 'Courier New', monospace;
+    background: #F5E6D3;
   }
-  :global(.leaflet-interactive) {
-    outline: none !important;
-  }
-  /* Popup stil güncellemeleri */
-  .popup {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 400px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    border-radius: 16px;
-    overflow: hidden;
+
+  /* Retro Navigation */
+  .retro-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: #F5E6D3;
+    border-bottom: 2px solid #8B4513;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+    box-shadow: 0 2px 4px rgba(139, 69, 19, 0.2);
     z-index: 1000;
   }
-  .popup-header {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
-    padding: 20px;
+
+  .compass {
+    font-size: 24px;
+    margin-right: 16px;
+  }
+
+  .retro-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border: 2px solid #8B4513;
+    background: #FFF8EB;
+    color: #8B4513;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 2px 2px 0 #8B4513;
+  }
+
+  .retro-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #8B4513;
+  }
+
+  .retro-btn.active {
+    background: #8B4513;
+    color: #FFF8EB;
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.3);
+    transform: translate(1px, 1px);
+  }
+
+  /* Retro Popup */
+  .retro-popup {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    width: 400px;
+    background: #F5E6D3;
+    border: 2px solid #8B4513;
+    box-shadow: 4px 4px 0 rgba(139, 69, 19, 0.3);
+    z-index: 1000;
+  }
+
+  .retro-header {
+    background: #8B4513;
+    color: #F5E6D3;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 2px solid #8B4513;
   }
-  .popup-header h3 {
+
+  .retro-header h3 {
     margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
   }
-  .close-btn {
+
+  .retro-close {
     background: none;
     border: none;
-    color: white;
+    color: #F5E6D3;
     font-size: 24px;
     cursor: pointer;
     padding: 0 5px;
-    transition: transform 0.2s ease;
   }
-  .close-btn:hover {
-    transform: scale(1.1);
-  }
-  /* Tab stil güncellemeleri */
-  .tabs {
+
+  .retro-tabs {
     display: flex;
-    background: rgba(249, 250, 251, 0.8);
-    padding: 15px 15px 0;
-    border-bottom: 1px solid #dee2e6;
-    gap: 8px;
+    gap: 2px;
+    padding: 12px;
+    background: #E6D5C3;
   }
-  .tab {
-    padding: 10px 20px;
-    border: none;
-    background: none;
+
+  .retro-tab {
+    padding: 8px 16px;
+    background: #F5E6D3;
+    border: 2px solid #8B4513;
+    color: #8B4513;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
     cursor: pointer;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #64748b;
-    margin-right: 5px;
-    transition: all 0.2s ease;
-    font-weight: 500;
+    transition: all 0.3s;
   }
-  .tab:hover {
-    background: rgba(99, 102, 241, 0.1);
-    color: #6366f1;
+
+  .retro-tab:hover {
+    background: #FFE8CC;
   }
-  .tab.active {
-    background: #6366f1;
-    color: white;
+
+  .retro-tab.active {
+    background: #8B4513;
+    color: #F5E6D3;
   }
-  /* İçerik stil güncellemeleri */
-  .tab-content {
-    background: white;
+
+  /* Retro Content Styles */
+  .retro-content {
     padding: 20px;
+    background: url('paper-texture.png');
+    border-top: 2px solid #8B4513;
   }
-  .president-info {
-    display: flex;
-    gap: 15px;
+
+  .retro-info-item {
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #8B4513;
+    background: rgba(255, 248, 235, 0.7);
   }
-  .president-image {
-    width: 120px;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
-  }
-  .president-image:hover {
-    transform: scale(1.02);
-  }
-  .president-details {
-    flex: 1;
-  }
-  .president-name {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #2c3e50;
-  }
-  .president-bio {
-    font-size: 13px;
-    color: #666;
-    line-height: 1.4;
-  }
-  .info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .info-item {
-    background: rgba(249, 250, 251, 0.8);
-    padding: 15px;
-    border-radius: 12px;
-    border-left: 4px solid #6366f1;
-    transition: transform 0.2s ease;
-  }
-  .info-item:hover {
-    transform: translateY(-2px);
-  }
-  .info-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #666;
-  }
-  .info-value {
-    font-size: 14px;
-    color: #2c3e50;
-    margin-top: 4px;
-  }
-  .military-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .military-stat {
-    background: rgba(249, 250, 251, 0.8);
-    padding: 15px;
-    border-radius: 12px;
-    border: none;
-    margin-bottom: 10px;
-    transition: transform 0.2s ease;
-  }
-  .military-stat:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-  .military-stat:hover {
-    transform: translateX(4px);
-  }
-  .military-stat-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #2c3e50;
+
+  .retro-label {
+    font-weight: bold;
+    color: #8B4513;
     margin-bottom: 4px;
   }
-  .military-stat-value {
-    font-size: 13px;
-    color: #666;
-    line-height: 1.5;
+
+  .retro-value {
+    color: #5C2E0E;
+  }
+
+  /* Retro Scrollbar */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F5E6D3;
+    border: 1px solid #8B4513;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #8B4513;
+    border: 2px solid #F5E6D3;
+  }
+
+  /* Retro Map Overlay */
+  :global(.leaflet-control-zoom) {
+    border: 2px solid #8B4513 !important;
+    box-shadow: 3px 3px 0 rgba(139, 69, 19, 0.3) !important;
+  }
+
+  :global(.leaflet-control-zoom a) {
+    background: #F5E6D3 !important;
+    color: #8B4513 !important;
+    border-color: #8B4513 !important;
+  }
+
+  :global(.leaflet-tooltip) {
+    background: #F5E6D3 !important;
+    border: 2px solid #8B4513 !important;
+    color: #8B4513 !important;
+    font-family: 'Courier New', monospace !important;
+    box-shadow: 3px 3px 0 rgba(139, 69, 19, 0.3) !important;
+  }
+
+  /* Retro label stilleri */
+  :global(.retro-labels) {
+    filter: sepia(100%) hue-rotate(5deg) opacity(0.7);
+  }
+
+  :global(.retro-water-labels) {
+    filter: sepia(100%) hue-rotate(190deg) opacity(0.6);
+  }
+
+  :global(.country-label) {
+    background: transparent;
+    border: none;
+    font-family: 'Courier New', monospace;
+    color: #5C2E0E;
+    font-weight: bold;
+    font-size: 12px;
+    text-shadow: 
+      2px 2px 2px #F5E6D3,
+      -2px -2px 2px #F5E6D3,
+      2px -2px 2px #F5E6D3,
+      -2px 2px 2px #F5E6D3;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Kıta isimleri için özel stil */
+  :global(.continent-label) {
+    font-family: 'Courier New', monospace;
+    color: #8B4513;
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 
+      3px 3px 3px #F5E6D3,
+      -3px -3px 3px #F5E6D3,
+      3px -3px 3px #F5E6D3,
+      -3px 3px 3px #F5E6D3;
+    opacity: 0.7;
+  }
+  main {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+  .map {
+    width: 100%;
+    height: 100vh;
+    padding-top: 48px;
+    z-index: 1;
   }
   /* Loader stil güncellemeleri */
   .loader {
@@ -625,209 +626,12 @@
     width: 30px;
     height: 30px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #6366f1;
+    border-top: 4px solid #8B4513;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-  }
-  /* Tooltip stil güncellemeleri */
-  :global(.country-tooltip) {
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(4px);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 12px;
-    padding: 6px 12px;
-    font-weight: 500;
-  }
-  main {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-  }
-  .map {
-    width: 100%;
-    height: 100vh;
-    z-index: 1;
-  }
-  @media (max-width: 768px) {
-    .popup {
-      width: 90%;
-      top: auto;
-      bottom: 0;
-      right: 0;
-      left: 0;
-      border-radius: 16px 16px 0 0;
-    }
-    .info-grid {
-      grid-template-columns: 1fr;
-    }
-    .president-info {
-      flex-direction: column;
-      align-items: center;
-    }
-    .president-image {
-      width: 100px;
-      height: 120px;
-    }
-    .alliance-box {
-      width: 90%;
-      left: 50%;
-      transform: translateX(-50%);
-      max-height: 50vh;
-    }
-  }
-
-  .alliance-box {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 380px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    z-index: 1000;
-  }
-
-  .box-header {
-    padding: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e9ecef;
-  }
-
-  .box-header h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-
-  .reset-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border: none;
-    background: #f1f3f5;
-    color: #495057;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .reset-btn:hover {
-    background: #e9ecef;
-  }
-
-  .alliance-content {
-    padding: 16px;
-    max-height: 600px;
-    overflow-y: auto;
-  }
-
-  .category-section {
-    margin-bottom: 24px;
-  }
-
-  .category-section h3 {
-    font-size: 14px;
-    color: #868e96;
-    margin: 0 0 12px 0;
-    font-weight: 500;
-  }
-
-  .alliance-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .alliance-btn {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
-    background: white;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .alliance-btn:hover {
-    border-color: var(--alliance-color);
-    background: rgba(var(--alliance-color), 0.05);
-  }
-
-  .alliance-btn.active {
-    background: var(--alliance-color);
-    border-color: var(--alliance-color);
-    color: white;
-  }
-
-  .alliance-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .alliance-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  .alliance-name {
-    font-weight: 500;
-    font-size: 14px;
-  }
-
-  .alliance-desc {
-    font-size: 12px;
-    color: #868e96;
-  }
-
-  .alliance-btn.active .alliance-desc {
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  .theme-selector {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    display: flex;
-    gap: 8px;
-    z-index: 1000;
-  }
-
-  .theme-btn {
-    padding: 8px 12px;
-    border: none;
-    background: #f1f3f5;
-    color: #495057;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .theme-btn:hover {
-    background: #e9ecef;
-  }
-
-  .theme-btn.active {
-    background: #6366f1;
-    color: white;
   }
 </style>
