@@ -3,7 +3,6 @@
   import 'leaflet/dist/leaflet.css';
   import { fade, slide } from 'svelte/transition';
   import { countryInfo } from './lib/countryData';
-
   let map;
   let mapElement;
   let selectedCountry = null;
@@ -15,7 +14,6 @@
   let mapInitialized = false;
   let lastClickTime = 0;
   const DOUBLE_CLICK_THRESHOLD = 300;
-
   const mapOptions = {
     center: [20, 0],
     zoom: 2,
@@ -32,7 +30,6 @@
     markerZoomAnimation: false,
     preferCanvas: true
   };
-
   const getBaseStyle = () => ({
     fillColor: 'transparent',
     fillOpacity: 0,
@@ -40,7 +37,6 @@
     opacity: 0.6,      // Orta seviye opaklık
     weight: 1.2        // Biraz daha kalın sınır
   });
-
   const getHighlightStyle = () => ({
     fillColor: '#2ecc71',
     weight: 2,
@@ -50,7 +46,6 @@
     fillOpacity: 0.7,
     className: 'country-highlight'
   });
-
   const getSelectedStyle = () => ({
     fillColor: '#e74c3c',
     weight: 2,
@@ -60,32 +55,26 @@
     fillOpacity: 0.7,
     className: 'country-selected'
   });
-
   const handleCountryClick = async (e, feature, layer) => {
     isLoading = true;
     const currentTime = Date.now();
     const countryName = feature.properties.name;
-
     if (currentTime - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
       return;
     }
     lastClickTime = currentTime;
-
     try {
       if (currentLayer) {
         currentLayer.setStyle(getBaseStyle());
       }
-
       const info = countryInfo[countryName];
       if (info) {
         selectedCountry = { name: countryName, data: info };
         activeTab = 'president';
         currentLayer = layer;
         layer.setStyle(getSelectedStyle());
-
         const bounds = layer.getBounds();
         const center = bounds.getCenter();
-
         await map.flyTo(center, 4, {
           duration: 1,
           easeLinearity: 0.25
@@ -97,10 +86,8 @@
       isLoading = false;
     }
   };
-
   const handleMouseOver = (e, feature, layer) => {
     const countryName = feature.properties.name;
-
     if (selectedCountry?.name !== countryName) {
       layer.setStyle(getHighlightStyle());
       layer.bindTooltip(countryName, {
@@ -110,33 +97,25 @@
       }).openTooltip();
     }
   };
-
   const handleMouseOut = (e, feature, layer) => {
     const countryName = feature.properties.name;
-
     if (selectedCountry?.name !== countryName) {
       layer.setStyle(getBaseStyle());
     }
     layer.closeTooltip();
   };
-
   const initializeMap = async () => {
     if (mapInitialized) return;
-
     const L = await import('leaflet');
-
     map = L.map(mapElement, mapOptions);
-
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '©OpenStreetMap, ©CartoDB',
       subdomains: 'abcd',
       maxZoom: 20
     }).addTo(map);
-
     try {
       const response = await fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json');
       const data = await response.json();
-
       geoJsonLayer = L.geoJSON(data, {
         style: getBaseStyle,
         onEachFeature: (feature, layer) => {
@@ -147,13 +126,11 @@
           });
         }
       }).addTo(map);
-
       mapInitialized = true;
     } catch (error) {
       console.error('Error initializing map:', error);
     }
   };
-
   const closePopup = () => {
     if (currentLayer) {
       currentLayer.setStyle(getBaseStyle());
@@ -165,11 +142,9 @@
       easeLinearity: 0.25
     });
   };
-
   onMount(async () => {
     await initializeMap();
   });
-
   onDestroy(() => {
     if (map) {
       map.remove();
@@ -177,17 +152,17 @@
     }
   });
 </script>
-
+<svelte:head>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</svelte:head>
 <main>
   <div class="map" bind:this={mapElement}></div>
-
   {#if selectedCountry}
     <div class="popup" transition:slide>
       <div class="popup-header">
         <h3>{selectedCountry.name}</h3>
         <button class="close-btn" on:click={closePopup}>×</button>
       </div>
-
       <div class="tabs">
         <button
           class="tab"
@@ -211,7 +186,6 @@
           Askeri
         </button>
       </div>
-
       <div class="tab-content">
         {#if activeTab === 'president'}
           <div class="president-info" transition:fade>
@@ -280,73 +254,51 @@
       </div>
     </div>
   {/if}
-
   {#if isLoading}
     <div class="loader" transition:fade>
       <div class="spinner"></div>
     </div>
   {/if}
 </main>
-
 <style>
+  /* Genel stil güncellemeleri */
   :global(body) {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f7fa;
   }
-
   :global(.leaflet-interactive) {
     outline: none !important;
   }
-
-  :global(.country-tooltip) {
-    background: rgba(0, 0, 0, 0.8);
-    border: none;
-    border-radius: 4px;
-    color: white;
-    font-size: 12px;
-    padding: 4px 8px;
-  }
-
-  main {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-  }
-
-  .map {
-    width: 100%;
-    height: 100vh;
-    z-index: 1;
-  }
-
+  /* Popup stil güncellemeleri */
   .popup {
     position: absolute;
     top: 20px;
     right: 20px;
     width: 400px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
     overflow: hidden;
     z-index: 1000;
   }
-
   .popup-header {
-    background: linear-gradient(135deg, #3498db, #2ecc71);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: white;
-    padding: 15px;
+    padding: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-
   .popup-header h3 {
     margin: 0;
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
   }
-
   .close-btn {
     background: none;
     border: none;
@@ -356,176 +308,197 @@
     padding: 0 5px;
     transition: transform 0.2s ease;
   }
-
   .close-btn:hover {
     transform: scale(1.1);
   }
-
+  /* Tab stil güncellemeleri */
   .tabs {
     display: flex;
-    background: #f8f9fa;
-    padding: 10px 10px 0;
+    background: rgba(249, 250, 251, 0.8);
+    padding: 15px 15px 0;
     border-bottom: 1px solid #dee2e6;
+    gap: 8px;
   }
-
   .tab {
-    padding: 8px 15px;
+    padding: 10px 20px;
     border: none;
     background: none;
     cursor: pointer;
-    border-radius: 6px 6px 0 0;
+    border-radius: 8px;
     font-size: 14px;
-    color: #666;
+    color: #64748b;
     margin-right: 5px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    font-weight: 500;
   }
-
   .tab:hover {
-    background: #e9ecef;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
   }
-
   .tab.active {
-    background: #3498db;
+    background: #6366f1;
     color: white;
   }
-
+  /* İçerik stil güncellemeleri */
   .tab-content {
     background: white;
-    padding: 15px;
+    padding: 20px;
   }
-
   .president-info {
     display: flex;
     gap: 15px;
   }
-
   .president-image {
     width: 120px;
     height: 150px;
     object-fit: cover;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
   }
-
+  .president-image:hover {
+    transform: scale(1.02);
+  }
   .president-details {
     flex: 1;
   }
-
   .president-name {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 8px;
     color: #2c3e50;
   }
-
   .president-bio {
     font-size: 13px;
     color: #666;
     line-height: 1.4;
   }
-
   .info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
-
   .info-item {
-    background: #f8f9fa;
-    padding: 10px;
-    border-radius: 6px;
-    border-left: 3px solid #3498db;
+    background: rgba(249, 250, 251, 0.8);
+    padding: 15px;
+    border-radius: 12px;
+    border-left: 4px solid #6366f1;
+    transition: transform 0.2s ease;
   }
-
+  .info-item:hover {
+    transform: translateY(-2px);
+  }
   .info-label {
     font-size: 12px;
     font-weight: 600;
     color: #666;
   }
-
   .info-value {
     font-size: 14px;
     color: #2c3e50;
     margin-top: 4px;
   }
-
   .military-stats {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
-
   .military-stat {
-    padding-bottom: 12px;
-    border-bottom: 1px solid #eee;
+    background: rgba(249, 250, 251, 0.8);
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    margin-bottom: 10px;
+    transition: transform 0.2s ease;
   }
-
   .military-stat:last-child {
     border-bottom: none;
     padding-bottom: 0;
   }
-
+  .military-stat:hover {
+    transform: translateX(4px);
+  }
   .military-stat-label {
     font-size: 14px;
     font-weight: 600;
     color: #2c3e50;
     margin-bottom: 4px;
   }
-
   .military-stat-value {
     font-size: 13px;
     color: #666;
     line-height: 1.5;
   }
-
+  /* Loader stil güncellemeleri */
   .loader {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     z-index: 1000;
   }
-
   .spinner {
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
+    border-top: 4px solid #6366f1;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
-
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-
+  /* Tooltip stil güncellemeleri */
+  :global(.country-tooltip) {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 12px;
+    padding: 6px 12px;
+    font-weight: 500;
+  }
+  main {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+  .map {
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+  }
   @media (max-width: 768px) {
     .popup {
       width: 90%;
       top: auto;
-      bottom: 20px;
-      right: 5%;
-      left: 5%;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      border-radius: 16px 16px 0 0;
     }
-
     .info-grid {
       grid-template-columns: 1fr;
     }
-
     .president-info {
       flex-direction: column;
       align-items: center;
       text-align: center;
     }
-
     .president-image {
       width: 100px;
       height: 130px;
+    }
+    .tab {
+      padding: 8px 16px;
+      font-size: 13px;
     }
   }
 </style>
