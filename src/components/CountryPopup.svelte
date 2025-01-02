@@ -1,6 +1,4 @@
 <script>
-  import { fade, slide } from 'svelte/transition';
-  
   export let selectedCountry;
   export let closePopup;
   export let activeCategory;
@@ -8,7 +6,6 @@
 
 {#if selectedCountry}
   <div class="modern-popup"
-       transition:slide={{duration: 400, axis: 'x'}}
        style="transform-origin: left">
     <!-- Header with close button -->
     <div class="popup-header">
@@ -345,7 +342,6 @@
     </div>
   </div>
 {/if}
-
 <style>
   /* Modern Popup */
   .modern-popup {
@@ -359,6 +355,7 @@
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+    z-index: 9999; /* Yüksek değer verin */
   }
   .main-info-card {
     padding: 24px;
@@ -446,9 +443,6 @@
       opacity: 1;
     }
   }
-  .modern-popup {
-    animation: slideIn 0.4s ease-out;
-  }
   /* InfoCard Stilleri */
   .info-card {
     background: #fff;
@@ -487,7 +481,6 @@
     right: 10px;
     z-index: 1;
   }
-
   .close-button {
     background: rgba(255, 255, 255, 0.2);
     border: none;
@@ -502,7 +495,6 @@
     justify-content: center;
     transition: all 0.2s ease;
   }
-
   .close-button:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
