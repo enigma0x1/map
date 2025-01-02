@@ -314,7 +314,7 @@
       demographics: {
         ageStructure: {
           under15: "23.1%",
-          15to64: "67.8%",
+          age15to64: "67.8%",
           over65: "9.1%"
         },
         urbanization: "76.1%",
@@ -409,7 +409,7 @@
       demographics: {
         ageStructure: {
           under15: "18.9%",
-          15to64: "65.9%",
+          age15to64: "65.9%",
           over65: "15.2%"
         },
         urbanization: "82.7%",
@@ -433,14 +433,14 @@
         environmentalIssues: ["Air pollution", "Water pollution"]
       },
       infrastructure: {
-        airports: 19,633,
+        airports: 19633,
         railways: "224,000 km",
         roadways: "6,853,000 km",
         ports: ["New York", "Los Angeles", "Houston"],
         internetUsers: "313 million"
       },
       education: {
-        universities: 4,298,
+        universities: 4298,
         studentPopulation: "19.7 million",
         researchOutput: "Annual publications: 1.2 million+"
       },
@@ -577,7 +577,7 @@
             <InfoCard
               icon="🧑‍🤝‍🧑"
               title="15-64"
-              value={selectedCountry.data.demographics.ageStructure[15to64]}
+              value={selectedCountry.data.demographics.ageStructure.age15to64}
             />
             <InfoCard
               icon="👴"
@@ -901,4 +901,156 @@
   .category-selector button {
     padding: 8px 16px;
     border: none;
-    border-radius: 2
+    border-radius: 20px;
+    background: white;
+    color: #333;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+  }
+  .category-selector button.active {
+    background: #1a237e;
+    color: white;
+  }
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .bottom-strip {
+    padding: 12px 24px;
+    background: #f5f5f5;
+    font-size: 12px;
+  }
+  .quick-facts {
+    display: flex;
+    justify-content: space-between;
+    color: #666;
+  }
+  /* Animasyon için */
+  @keyframes slideIn {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  .modern-popup {
+    animation: slideIn 0.4s ease-out;
+  }
+  /* InfoCard Stilleri */
+  .info-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  .card-icon {
+    font-size: 24px;
+    color: #1a237e;
+  }
+  .card-details {
+    display: flex;
+    flex-direction: column;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+  }
+  .card-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a237e;
+  }
+  .card-trend {
+    font-size: 12px;
+    color: #666;
+  }
+  /* Kıta isimleri için özel stil */
+  :global(.continent-label) {
+    font-family: 'Inter', sans-serif;
+    color: rgba(139, 69, 19, 0.7);
+    font-size: 24px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+    opacity: 0.7;
+  }
+  main {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+  .map {
+    width: 100%;
+    height: 100vh;
+    padding-top: 40px;
+    z-index: 1;
+  }
+  /* Loader stil güncellemeleri */
+  .loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #8B4513;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  /* Sınır çizgisini pop-up şeklinde büyütmek için transform animasyonu */
+  .country-pop {
+    /* Animasyonun adı ve süresi */
+    animation: pop-scale 0.5s ease-in-out forwards;
+    /* transform-box ve transform-origin ayarları,
+       SVG path'i kendi merkezinden ölçeklemeye yarar. */
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  /* Keyframes: 0% -> normal, 50% -> yaklaşık %10 büyüt, 100% -> normale dön */
+  @keyframes pop-scale {
+    0% {
+      transform: scale(1);
+      stroke-width: 2; /* İlk anda stroke kalınlığı */
+    }
+    50% {
+      transform: scale(1.1);
+      stroke-width: 3; /* Tepede biraz daha kalın görünebilir */
+    }
+    100% {
+      transform: scale(1);
+      stroke-width: 2;
+    }
+  }
+</style>
