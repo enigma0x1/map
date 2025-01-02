@@ -289,6 +289,7 @@
   <CountryPopup
     {selectedCountry}
     closePopup={closePopup}
+    bind:activeCategory
   />
   {#if isLoading}
     <div class="loader" transition:fade>
