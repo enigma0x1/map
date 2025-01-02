@@ -30,11 +30,13 @@
   };
 
   const getBaseStyle = () => ({
-    fillColor: 'transparent',
-    fillOpacity: 0,
-    color: 'transparent',
-    opacity: 0,
-    weight: 0
+    fillColor: '#3498db',
+    weight: 1,
+    opacity: 1,
+    color: 'white',
+    dashArray: '',
+    fillOpacity: 0.5,
+    className: 'country-base'
   });
 
   const getHighlightStyle = () => ({
