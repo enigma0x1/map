@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import 'leaflet/dist/leaflet.css';
-  import { fade } from 'svelte/transition';
+  import { fade, slide } from 'svelte/transition';
 
   // Veri setlerini içe aktar
   import { categories, membershipData, countryInfo } from './data.js';
@@ -22,6 +22,7 @@
   let activeCategory = 'overview';
   const DOUBLE_CLICK_THRESHOLD = 300;
   let isAnimating = false;
+  let isSidebarOpen = false;
 
   // Harita seçenekleri ve stilleri
   const mapOptions = {
@@ -122,7 +123,7 @@
       const info = countryInfo[countryName];
       if (info) {
         selectedCountry = { name: countryName, data: info, layer };
-        activeTab = 'Details';
+        activeCategory = 'overview'; // Reset category when new country is selected
         currentLayer = layer;
         layer.setStyle(getSelectedStyle());
         const bounds = layer.getBounds();
@@ -245,6 +246,10 @@
     currentTheme = theme;
   }
 
+  const toggleSidebar = () => {
+    isSidebarOpen = !isSidebarOpen;
+  };
+
   onMount(async () => {
     await initializeMap();
   });
@@ -263,7 +268,7 @@
 
 <nav class="compact-nav">
   <div class="nav-left">
-    <button class="menu-btn">☰</button>
+    <button class="menu-btn" on:click={toggleSidebar}>☰</button>
     <h1>World Map</h1>
   </div>
   <div class="nav-center">
@@ -286,14 +291,57 @@
 
 <main>
   <div class="map" bind:this={mapElement}></div>
-  <CountryPopup
-    {selectedCountry}
-    closePopup={closePopup}
-    bind:activeCategory
-  />
+  {#if selectedCountry}
+    <CountryPopup
+      {selectedCountry}
+      {closePopup}
+      bind:activeCategory
+    />
+  {/if}
   {#if isLoading}
     <div class="loader" transition:fade>
       <div class="spinner"></div>
+    </div>
+  {/if}
+  {#if isSidebarOpen}
+    <div class="sidebar-backdrop" on:click={toggleSidebar} transition:fade={{duration: 200}}>
+      <div class="sidebar" 
+           transition:slide={{duration: 300, axis: 'x'}} 
+           on:click|stopPropagation>
+        <div class="sidebar-header">
+          <h2>Menu</h2>
+          <button class="close-btn" on:click={toggleSidebar}>&times;</button>
+        </div>
+        <div class="sidebar-content">
+          <div class="sidebar-section">
+            <h3>Map Settings</h3>
+            <button class="sidebar-btn" on:click={() => handleThemeChange('retro')}>
+              Retro Theme
+            </button>
+            <button class="sidebar-btn" on:click={() => map.setZoom(2)}>
+              Reset Zoom
+            </button>
+          </div>
+          <div class="sidebar-section">
+            <h3>Alliances</h3>
+            {#each Object.entries(categories) as [key, category]}
+              <div class="sidebar-category">
+                <h4>{category.label}</h4>
+                {#each category.alliances as alliance}
+                  <button 
+                    class="sidebar-alliance-btn"
+                    class:active={activeAlliance === alliance.id}
+                    on:click={() => handleAllianceClick(alliance)}
+                  >
+                    <span class="dot" style="background: {alliance.color}"></span>
+                    {alliance.name}
+                  </button>
+                {/each}
+              </div>
+            {/each}
+          </div>
+        </div>
+      </div>
     </div>
   {/if}
 </main>
@@ -440,5 +488,136 @@
       transform: scale(1);
       stroke-width: 2;
     }
+  }
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 300px;
+    background: white;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .sidebar-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+  }
+
+  .close-btn:hover {
+    background: #f5f5f5;
+    color: #333;
+  }
+
+  .sidebar-section {
+    margin-bottom: 24px;
+  }
+
+  .sidebar-section h3 {
+    font-size: 16px;
+    color: #666;
+    margin: 0 0 12px 0;
+  }
+
+  .sidebar-btn {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .sidebar-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+  }
+
+  .sidebar-category {
+    margin-bottom: 16px;
+  }
+
+  .sidebar-category h4 {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 8px 0;
+  }
+
+  .sidebar-alliance-btn {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar-alliance-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+  }
+
+  .sidebar-alliance-btn.active {
+    background: #f0f0f0;
+    border-color: #bbb;
+    font-weight: 500;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
   }
 </style>
