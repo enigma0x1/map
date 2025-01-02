@@ -63,7 +63,7 @@
     isLoading = true;
     const currentTime = Date.now();
     const countryName = feature.properties.name;
-    
+
     if (currentTime - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
       return;
     }
@@ -83,7 +83,7 @@
 
         const bounds = layer.getBounds();
         const center = bounds.getCenter();
-        
+
         await map.flyTo(center, 4, {
           duration: 1,
           easeLinearity: 0.25
@@ -98,7 +98,7 @@
 
   const handleMouseOver = (e, feature, layer) => {
     const countryName = feature.properties.name;
-    
+
     if (selectedCountry?.name !== countryName) {
       layer.setStyle(getHighlightStyle());
       layer.bindTooltip(countryName, {
@@ -111,7 +111,7 @@
 
   const handleMouseOut = (e, feature, layer) => {
     const countryName = feature.properties.name;
-    
+
     if (selectedCountry?.name !== countryName) {
       layer.setStyle(getBaseStyle());
     }
@@ -120,9 +120,9 @@
 
   const initializeMap = async () => {
     if (mapInitialized) return;
-    
+
     const L = await import('leaflet');
-    
+
     map = L.map(mapElement, mapOptions);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -178,14 +178,14 @@
 
 <main>
   <div class="map" bind:this={mapElement}></div>
-  
+
   {#if selectedCountry}
     <div class="popup" transition:slide>
       <div class="popup-header">
         <h3>{selectedCountry.name}</h3>
         <button class="close-btn" on:click={closePopup}>×</button>
       </div>
-      
+
       <div class="tabs">
         <button
           class="tab"
@@ -213,8 +213,8 @@
       <div class="tab-content">
         {#if activeTab === 'president'}
           <div class="president-info" transition:fade>
-            <img 
-              src={selectedCountry.data.president.image} 
+            <img
+              src={selectedCountry.data.president.image}
               alt={selectedCountry.data.president.name}
               class="president-image"
               on:error={(e) => e.target.src = 'default-president.jpg'}
@@ -291,6 +291,10 @@
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  }
+
+  :global(.leaflet-interactive) {
+    outline: none !important;
   }
 
   :global(.country-tooltip) {
