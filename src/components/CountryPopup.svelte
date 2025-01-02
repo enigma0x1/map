@@ -5,22 +5,6 @@
   export let selectedCountry;
   export let closePopup;
   export let activeCategory = 'overview';
-
-  // InfoCard bileşeni (inline olarak tanımlanabilir)
-  function InfoCard({ icon, title, value, trend }) {
-    return (
-      <div class="info-card">
-        <div class="card-icon">{icon}</div>
-        <div class="card-details">
-          <span class="card-title">{title}</span>
-          <span class="card-value">{value}</span>
-          {#if trend}
-            <span class="card-trend">{trend}</span>
-          {/if}
-        </div>
-      </div>
-    );
-  }
 </script>
 
 {#if selectedCountry}
@@ -55,217 +39,295 @@
       {#if activeCategory === 'overview'}
         <div class="overview-grid">
           <!-- Temel İstatistikler -->
-          <InfoCard
-            icon="👥"
-            title="Population"
-            value={selectedCountry.data.general.population}
-            trend="+1.2% annual"
-          />
-          <InfoCard
-            icon="🏛️"
-            title="Capital"
-            value={selectedCountry.data.general.capital}
-          />
-          <InfoCard
-            icon="💰"
-            title="GDP"
-            value={selectedCountry.data.economy.gdp}
-          />
-          <InfoCard
-            icon="🌍"
-            title="Region"
-            value={selectedCountry.data.general.region}
-          />
-          <InfoCard
-            icon="🗣️"
-            title="Language"
-            value={selectedCountry.data.general.language}
-          />
-          <InfoCard
-            icon="🪙"
-            title="Currency"
-            value={selectedCountry.data.general.currency}
-          />
+          <div class="info-card">
+            <div class="card-icon">👥</div>
+            <div class="card-details">
+              <span class="card-title">Population</span>
+              <span class="card-value">{selectedCountry.data.general.population}</span>
+              <span class="card-trend">+1.2% annual</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🏛️</div>
+            <div class="card-details">
+              <span class="card-title">Capital</span>
+              <span class="card-value">{selectedCountry.data.general.capital}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">💰</div>
+            <div class="card-details">
+              <span class="card-title">GDP</span>
+              <span class="card-value">{selectedCountry.data.economy.gdp}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🌍</div>
+            <div class="card-details">
+              <span class="card-title">Region</span>
+              <span class="card-value">{selectedCountry.data.general.region}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🗣️</div>
+            <div class="card-details">
+              <span class="card-title">Language</span>
+              <span class="card-value">{selectedCountry.data.general.language}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🪙</div>
+            <div class="card-details">
+              <span class="card-title">Currency</span>
+              <span class="card-value">{selectedCountry.data.general.currency}</span>
+            </div>
+          </div>
         </div>
       {:else if activeCategory === 'demographics'}
         <div class="demographics-content">
-          <InfoCard
-            icon="👶"
-            title="Under 15"
-            value={selectedCountry.data.demographics.ageStructure.under15}
-          />
-          <InfoCard
-            icon="🧑‍🤝‍🧑"
-            title="15-64"
-            value={selectedCountry.data.demographics.ageStructure.age15to64}
-          />
-          <InfoCard
-            icon="👴"
-            title="Over 65"
-            value={selectedCountry.data.demographics.ageStructure.over65}
-          />
-          <InfoCard
-            icon="🏙️"
-            title="Urbanization"
-            value={selectedCountry.data.demographics.urbanization}
-          />
-          <InfoCard
-            icon="📚"
-            title="Literacy Rate"
-            value={selectedCountry.data.demographics.literacyRate}
-          />
-          <InfoCard
-            icon="🗣️"
-            title="Languages"
-            value={selectedCountry.data.demographics.languages.join(', ')}
-          />
-          <InfoCard
-            icon="👥"
-            title="Ethnic Groups"
-            value={selectedCountry.data.demographics.ethnicGroups.join(', ')}
-          />
-          <InfoCard
-            icon="🙏"
-            title="Religions"
-            value={Object.entries(selectedCountry.data.demographics.religions).map(([key, value]) => `${key}: ${value}`).join(', ')}
-          />
+          <div class="info-card">
+            <div class="card-icon">👶</div>
+            <div class="card-details">
+              <span class="card-title">Under 15</span>
+              <span class="card-value">{selectedCountry.data.demographics.ageStructure.under15}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🧑‍🤝‍🧑</div>
+            <div class="card-details">
+              <span class="card-title">15-64</span>
+              <span class="card-value">{selectedCountry.data.demographics.ageStructure.age15to64}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">👴</div>
+            <div class="card-details">
+              <span class="card-title">Over 65</span>
+              <span class="card-value">{selectedCountry.data.demographics.ageStructure.over65}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🏙️</div>
+            <div class="card-details">
+              <span class="card-title">Urbanization</span>
+              <span class="card-value">{selectedCountry.data.demographics.urbanization}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">📚</div>
+            <div class="card-details">
+              <span class="card-title">Literacy Rate</span>
+              <span class="card-value">{selectedCountry.data.demographics.literacyRate}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🗣️</div>
+            <div class="card-details">
+              <span class="card-title">Languages</span>
+              <span class="card-value">{selectedCountry.data.demographics.languages.join(', ')}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">👥</div>
+            <div class="card-details">
+              <span class="card-title">Ethnic Groups</span>
+              <span class="card-value">{selectedCountry.data.demographics.ethnicGroups.join(', ')}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🙏</div>
+            <div class="card-details">
+              <span class="card-title">Religions</span>
+              <span class="card-value">{Object.entries(selectedCountry.data.demographics.religions).map(([key, value]) => `${key}: ${value}`).join(', ')}</span>
+            </div>
+          </div>
         </div>
       {:else if activeCategory === 'economy'}
         <div class="economy-content">
-          <InfoCard
-            icon="💰"
-            title="GDP"
-            value={selectedCountry.data.economy.gdp}
-          />
-          <InfoCard
-            icon="📈"
-            title="GDP Rank"
-            value={selectedCountry.data.economy.gdpRank}
-          />
-          <InfoCard
-            icon="📊"
-            title="GDP Growth"
-            value={selectedCountry.data.economy.gdpGrowth}
-          />
-          <InfoCard
-            icon="🏭"
-            title="Major Sectors"
-            value={selectedCountry.data.economy.majorSectors.join(', ')}
-          />
-          <InfoCard
-            icon="🤝"
-            title="Trading Partners"
-            value={selectedCountry.data.trade.tradingPartners.join(', ')}
-          />
-          <InfoCard
-            icon="🚢"
-            title="Main Exports"
-            value={selectedCountry.data.trade.mainExports.join(', ')}
-          />
-          <InfoCard
-            icon="🛢️"
-            title="Main Imports"
-            value={selectedCountry.data.trade.mainImports.join(', ')}
-          />
+          <div class="info-card">
+            <div class="card-icon">💰</div>
+            <div class="card-details">
+              <span class="card-title">GDP</span>
+              <span class="card-value">{selectedCountry.data.economy.gdp}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">📈</div>
+            <div class="card-details">
+              <span class="card-title">GDP Rank</span>
+              <span class="card-value">{selectedCountry.data.economy.gdpRank}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">📊</div>
+            <div class="card-details">
+              <span class="card-title">GDP Growth</span>
+              <span class="card-value">{selectedCountry.data.economy.gdpGrowth}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🏭</div>
+            <div class="card-details">
+              <span class="card-title">Major Sectors</span>
+              <span class="card-value">{selectedCountry.data.economy.majorSectors.join(', ')}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🤝</div>
+            <div class="card-details">
+              <span class="card-title">Trading Partners</span>
+              <span class="card-value">{selectedCountry.data.trade.tradingPartners.join(', ')}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🚢</div>
+            <div class="card-details">
+              <span class="card-title">Main Exports</span>
+              <span class="card-value">{selectedCountry.data.trade.mainExports.join(', ')}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🛢️</div>
+            <div class="card-details">
+              <span class="card-title">Main Imports</span>
+              <span class="card-value">{selectedCountry.data.trade.mainImports.join(', ')}</span>
+            </div>
+          </div>
         </div>
       {:else if activeCategory === 'military'}
         <div class="military-content">
-          <InfoCard
-            icon="🎖️"
-            title="Military Rank"
-            value={selectedCountry.data.military.rank}
-          />
-          <InfoCard
-            icon="🪖"
-            title="Active Personnel"
-            value={selectedCountry.data.military.personnel.active}
-          />
-          <InfoCard
-            icon="🛡️"
-            title="Reserve Personnel"
-            value={selectedCountry.data.military.personnel.reserve}
-          />
-          <InfoCard
-            icon="🛩️"
-            title="Aircraft"
-            value={selectedCountry.data.military.equipment.aircraft}
-          />
-          <InfoCard
-            icon="🚢"
-            title="Naval Assets"
-            value={selectedCountry.data.military.equipment.navalAssets}
-          />
-          <InfoCard
-            icon="💰"
-            title="Military Budget"
-            value={selectedCountry.data.military.budget}
-          />
+          <div class="info-card">
+            <div class="card-icon">🎖️</div>
+            <div class="card-details">
+              <span class="card-title">Military Rank</span>
+              <span class="card-value">{selectedCountry.data.military.rank}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🪖</div>
+            <div class="card-details">
+              <span class="card-title">Active Personnel</span>
+              <span class="card-value">{selectedCountry.data.military.personnel.active}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🛡️</div>
+            <div class="card-details">
+              <span class="card-title">Reserve Personnel</span>
+              <span class="card-value">{selectedCountry.data.military.personnel.reserve}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🛩️</div>
+            <div class="card-details">
+              <span class="card-title">Aircraft</span>
+              <span class="card-value">{selectedCountry.data.military.equipment.aircraft}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🚢</div>
+            <div class="card-details">
+              <span class="card-title">Naval Assets</span>
+              <span class="card-value">{selectedCountry.data.military.equipment.navalAssets}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">💰</div>
+            <div class="card-details">
+              <span class="card-title">Military Budget</span>
+              <span class="card-value">{selectedCountry.data.military.budget}</span>
+            </div>
+          </div>
         </div>
       {:else if activeCategory === 'geography'}
         <div class="geography-content">
-          <InfoCard
-            icon="🗺️"
-            title="Area"
-            value={selectedCountry.data.geography.area}
-          />
-          <InfoCard
-            icon="🌊"
-            title="Coastline"
-            value={selectedCountry.data.geography.coastline}
-          />
-          <InfoCard
-            icon="🌡️"
-            title="Climate"
-            value={selectedCountry.data.geography.climate}
-          />
-          <InfoCard
-            icon="⛰️"
-            title="Terrain"
-            value={selectedCountry.data.geography.terrain.join(', ')}
-          />
-          <InfoCard
-            icon="⛏️"
-            title="Natural Resources"
-            value={selectedCountry.data.geography.naturalResources.join(', ')}
-          />
-          <InfoCard
-            icon="⚠️"
-            title="Environmental Issues"
-            value={selectedCountry.data.geography.environmentalIssues.join(', ')}
-          />
+          <div class="info-card">
+            <div class="card-icon">🗺️</div>
+            <div class="card-details">
+              <span class="card-title">Area</span>
+              <span class="card-value">{selectedCountry.data.geography.area}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🌊</div>
+            <div class="card-details">
+              <span class="card-title">Coastline</span>
+              <span class="card-value">{selectedCountry.data.geography.coastline}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🌡️</div>
+            <div class="card-details">
+              <span class="card-title">Climate</span>
+              <span class="card-value">{selectedCountry.data.geography.climate}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">⛰️</div>
+            <div class="card-details">
+              <span class="card-title">Terrain</span>
+              <span class="card-value">{selectedCountry.data.geography.terrain.join(', ')}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">⛏️</div>
+            <div class="card-details">
+              <span class="card-title">Natural Resources</span>
+              <span class="card-value">{selectedCountry.data.geography.naturalResources.join(', ')}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">⚠️</div>
+            <div class="card-details">
+              <span class="card-title">Environmental Issues</span>
+              <span class="card-value">{selectedCountry.data.geography.environmentalIssues.join(', ')}</span>
+            </div>
+          </div>
         </div>
       {:else if activeCategory === 'innovation'}
         <div class="innovation-content">
-          <InfoCard
-            icon="💡"
-            title="Patents"
-            value={selectedCountry.data.innovation.patents}
-          />
-          <InfoCard
-            icon="🚀"
-            title="Startup Ecosystem"
-            value={selectedCountry.data.innovation.startupEcosystem}
-          />
-          <InfoCard
-            icon="🔬"
-            title="R&D Spending"
-            value={selectedCountry.data.innovation.rAndDSpending}
-          />
-          <InfoCard
-            icon="🎓"
-            title="Universities"
-            value={selectedCountry.data.education.universities}
-          />
-          <InfoCard
-            icon="🧑‍🎓"
-            title="Student Population"
-            value={selectedCountry.data.education.studentPopulation}
-          />
-          <InfoCard
-            icon="📰"
-            title="Research Output"
-            value={selectedCountry.data.education.researchOutput}
-          />
+          <div class="info-card">
+            <div class="card-icon">💡</div>
+            <div class="card-details">
+              <span class="card-title">Patents</span>
+              <span class="card-value">{selectedCountry.data.innovation.patents}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🚀</div>
+            <div class="card-details">
+              <span class="card-title">Startup Ecosystem</span>
+              <span class="card-value">{selectedCountry.data.innovation.startupEcosystem}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🔬</div>
+            <div class="card-details">
+              <span class="card-title">R&D Spending</span>
+              <span class="card-value">{selectedCountry.data.innovation.rAndDSpending}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🎓</div>
+            <div class="card-details">
+              <span class="card-title">Universities</span>
+              <span class="card-value">{selectedCountry.data.education.universities}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">🧑‍🎓</div>
+            <div class="card-details">
+              <span class="card-title">Student Population</span>
+              <span class="card-value">{selectedCountry.data.education.studentPopulation}</span>
+            </div>
+          </div>
+          <div class="info-card">
+            <div class="card-icon">📰</div>
+            <div class="card-details">
+              <span class="card-title">Research Output</span>
+              <span class="card-value">{selectedCountry.data.education.researchOutput}</span>
+            </div>
+          </div>
         </div>
       {/if}
     </div>
