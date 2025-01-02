@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
-  import { getComparisonData, countryInfo } from '../lib/countryData';
+  import { getComparisonData, countryInfo } from '../lib/countryData.js';
 
   export let selectedCountry;
   export let closePopup;
