@@ -2,11 +2,9 @@
   import { onMount, onDestroy } from 'svelte';
   import 'leaflet/dist/leaflet.css';
   import { fade, slide } from 'svelte/transition';
-
   // Veri setlerini içe aktar
   import { categories, membershipData, countryInfo } from './data.js';
   import CountryPopup from './components/CountryPopup.svelte';
-
   // Değişkenler
   let map;
   let mapElement;
@@ -23,7 +21,6 @@
   const DOUBLE_CLICK_THRESHOLD = 300;
   let isAnimating = false;
   let isSidebarOpen = false;
-
   // Harita seçenekleri ve stilleri
   const mapOptions = {
     center: [20, 0],
@@ -42,7 +39,6 @@
     markerZoomAnimation: false,
     preferCanvas: true
   };
-
   const themeOptions = {
     retro: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
@@ -55,7 +51,6 @@
       }
     }
   };
-
   const getBaseStyle = () => ({
     fillColor: 'transparent',
     fillOpacity: 0,
@@ -63,7 +58,6 @@
     opacity: 0.6,
     weight: 1.2
   });
-
   const getHighlightStyle = () => ({
     fillColor: '#A0522D',
     weight: 2,
@@ -73,7 +67,6 @@
     fillOpacity: 0.7,
     className: 'country-highlight'
   });
-
   const getSelectedStyle = () => ({
     fillColor: 'transparent',
     weight: 2,
@@ -82,7 +75,6 @@
     fillOpacity: 0,
     className: 'country-pop'
   });
-
   const addContinentLabels = (map) => {
     const continents = [
       { name: 'NORTH AMERICA', coords: [45, -100] },
@@ -92,7 +84,6 @@
       { name: 'ASIA', coords: [45, 90] },
       { name: 'OCEANIA', coords: [-25, 135] }
     ];
-
     continents.forEach(continent => {
       L.marker(continent.coords, {
         icon: L.divIcon({
@@ -102,7 +93,6 @@
       }).addTo(map);
     });
   };
-
   // Ana fonksiyonlar
   const handleCountryClick = async (e, feature, layer) => {
     if (isAnimating) return;
@@ -140,7 +130,6 @@
       isAnimating = false;
     }
   };
-
   const handleMouseOver = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -152,7 +141,6 @@
       }).openTooltip();
     }
   };
-
   const handleMouseOut = (e, feature, layer) => {
     const countryName = feature.properties.name;
     if (selectedCountry?.name !== countryName) {
@@ -160,7 +148,6 @@
     }
     layer.closeTooltip();
   };
-
   const initializeMap = async () => {
     if (mapInitialized) return;
     const L = await import('leaflet');
@@ -198,7 +185,6 @@
       position: 'bottomright'
     }).addAttribution('Created by Fatih Emre Aksoy').addTo(map);
   };
-
   function highlightCountries(allianceId) {
     if (!geoJsonLayer) return;
     geoJsonLayer.eachLayer(layer => {
@@ -219,7 +205,6 @@
       }
     });
   }
-
   function handleAllianceClick(alliance) {
     if (activeAlliance === alliance.id) {
       activeAlliance = null;
@@ -229,7 +214,6 @@
       highlightCountries(alliance.id);
     }
   }
-
   const closePopup = () => {
     if (currentLayer) {
       currentLayer.setStyle(getBaseStyle());
@@ -241,19 +225,15 @@
       easeLinearity: 0.25
     });
   };
-
   function handleThemeChange(theme) {
     currentTheme = theme;
   }
-
   const toggleSidebar = () => {
     isSidebarOpen = !isSidebarOpen;
   };
-
   onMount(async () => {
     await initializeMap();
   });
-
   onDestroy(() => {
     if (map) {
       map.remove();
@@ -261,11 +241,9 @@
     }
   });
 </script>
-
 <svelte:head>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </svelte:head>
-
 <nav class="compact-nav">
   <div class="nav-left">
     <button class="menu-btn" on:click={toggleSidebar}>☰</button>
@@ -288,7 +266,6 @@
     {/each}
   </div>
 </nav>
-
 <main>
   <div class="map" bind:this={mapElement}></div>
   {#if selectedCountry}
@@ -345,7 +322,6 @@
     </div>
   {/if}
 </main>
-
 <style>
   /* Genel Retro Stili */
   :global(body) {
@@ -498,7 +474,6 @@
     background: rgba(0, 0, 0, 0.5);
     z-index: 1001;
   }
-
   .sidebar {
     position: fixed;
     top: 0;
@@ -510,7 +485,6 @@
     padding: 20px;
     overflow-y: auto;
   }
-
   .sidebar-header {
     display: flex;
     justify-content: space-between;
@@ -519,13 +493,11 @@
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
   }
-
   .sidebar-header h2 {
     margin: 0;
     font-size: 20px;
     color: #333;
   }
-
   .close-btn {
     background: none;
     border: none;
@@ -541,22 +513,18 @@
     border-radius: 50%;
     transition: all 0.2s ease;
   }
-
   .close-btn:hover {
     background: #f5f5f5;
     color: #333;
   }
-
   .sidebar-section {
     margin-bottom: 24px;
   }
-
   .sidebar-section h3 {
     font-size: 16px;
     color: #666;
     margin: 0 0 12px 0;
   }
-
   .sidebar-btn {
     width: 100%;
     padding: 10px;
@@ -570,22 +538,18 @@
     text-align: left;
     font-size: 14px;
   }
-
   .sidebar-btn:hover {
     background: #f5f5f5;
     border-color: #ccc;
   }
-
   .sidebar-category {
     margin-bottom: 16px;
   }
-
   .sidebar-category h4 {
     font-size: 14px;
     color: #666;
     margin: 0 0 8px 0;
   }
-
   .sidebar-alliance-btn {
     width: 100%;
     padding: 8px 12px;
@@ -602,18 +566,15 @@
     align-items: center;
     gap: 8px;
   }
-
   .sidebar-alliance-btn:hover {
     background: #f5f5f5;
     border-color: #ccc;
   }
-
   .sidebar-alliance-btn.active {
     background: #f0f0f0;
     border-color: #bbb;
     font-weight: 500;
   }
-
   .dot {
     width: 8px;
     height: 8px;
