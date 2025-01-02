@@ -1,16 +1,20 @@
 <script>
   import { fade, slide } from 'svelte/transition';
-  import { categories } from '../data.js';
-
+  
   export let selectedCountry;
   export let closePopup;
-  export let activeCategory = 'overview';
+  export let activeCategory;
 </script>
 
 {#if selectedCountry}
   <div class="modern-popup"
        transition:slide={{duration: 400, axis: 'x'}}
        style="transform-origin: left">
+    <!-- Header with close button -->
+    <div class="popup-header">
+      <button class="close-button" on:click={closePopup}>×</button>
+    </div>
+    
     <!-- Ana Bilgi Kartı -->
     <div class="main-info-card">
       <div class="flag-container">
@@ -476,5 +480,31 @@
   .card-trend {
     font-size: 12px;
     color: #666;
+  }
+  .popup-header {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+  }
+
+  .close-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .close-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
   }
 </style>
