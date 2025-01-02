@@ -291,6 +291,8 @@
     >
       <div 
         class="sidebar"
+        role="dialog"
+        aria-modal="true"
         transition:slide={{duration: 300, axis: 'x'}}
         on:click|stopPropagation
       >
@@ -450,7 +452,7 @@
       transform: rotate(360deg);
     }
   }
-  /* Sınır çizgisini pop-up şeklinde büyütmek için transform animasyonu */
+  /* svelte-ignore unused-selector */
   .country-pop {
     /* Animasyonun adı ve süresi */
     animation: pop-scale 0.5s ease-in-out forwards;
