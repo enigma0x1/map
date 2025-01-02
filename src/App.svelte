@@ -15,6 +15,7 @@
   let mapInitialized = false;
   let lastClickTime = 0;
   let activeAlliance = null;
+  let currentTheme = 'light';
 
   const DOUBLE_CLICK_THRESHOLD = 300;
 
@@ -101,6 +102,29 @@
     className: 'country-selected'
   });
 
+  const themeOptions = {
+    light: {
+      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      attribution: '©OpenStreetMap, ©CartoDB'
+    },
+    vintage: {
+      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg',
+      attribution: 'Map tiles by Stamen Design'
+    },
+    dark: {
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+      attribution: '©OpenStreetMap, ©CartoDB'
+    },
+    watercolor: {
+      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
+      attribution: 'Map tiles by Stamen Design'
+    },
+    retro: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles &copy; Esri'
+    }
+  };
+
   const handleCountryClick = async (e, feature, layer) => {
     isLoading = true;
     const currentTime = Date.now();
@@ -157,11 +181,9 @@
     if (mapInitialized) return;
     const L = await import('leaflet');
     map = L.map(mapElement, mapOptions);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '©OpenStreetMap, ©CartoDB',
-      subdomains: 'abcd',
-      maxZoom: 20
-    }).addTo(map);
+    
+    updateMapTheme();
+
     try {
       const response = await fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json');
       const data = await response.json();
@@ -180,6 +202,21 @@
       console.error('Error initializing map:', error);
     }
   };
+
+  function updateMapTheme() {
+    if (!map) return;
+    map.eachLayer(layer => {
+      if (layer instanceof L.TileLayer) {
+        map.removeLayer(layer);
+      }
+    });
+    const theme = themeOptions[currentTheme];
+    L.tileLayer(theme.url, {
+      attribution: theme.attribution,
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(map);
+  }
 
   function highlightCountries(allianceId) {
     if (!geoJsonLayer) return;
@@ -226,6 +263,11 @@
     });
   };
 
+  function handleThemeChange(theme) {
+    currentTheme = theme;
+    updateMapTheme();
+  }
+
   onMount(async () => {
     await initializeMap();
   });
@@ -244,6 +286,14 @@
 
 <main>
   <div class="map" bind:this={mapElement}></div>
+
+  <div class="theme-selector">
+    <button class="theme-btn" class:active={currentTheme === 'light'} on:click={() => handleThemeChange('light')}>Light</button>
+    <button class="theme-btn" class:active={currentTheme === 'vintage'} on:click={() => handleThemeChange('vintage')}>Vintage</button>
+    <button class="theme-btn" class:active={currentTheme === 'dark'} on:click={() => handleThemeChange('dark')}>Dark</button>
+    <button class="theme-btn" class:active={currentTheme === 'watercolor'} on:click={() => handleThemeChange('watercolor')}>Watercolor</button>
+    <button class="theme-btn" class:active={currentTheme === 'retro'} on:click={() => handleThemeChange('retro')}>Retro</button>
+  </div>
 
   <div class="alliance-box">
     <div class="box-header">
@@ -750,5 +800,34 @@
 
   .alliance-btn.active .alliance-desc {
     color: rgba(255, 255, 255, 0.8);
+  }
+
+  .theme-selector {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+  }
+
+  .theme-btn {
+    padding: 8px 12px;
+    border: none;
+    background: #f1f3f5;
+    color: #495057;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .theme-btn:hover {
+    background: #e9ecef;
+  }
+
+  .theme-btn.active {
+    background: #6366f1;
+    color: white;
   }
 </style>
