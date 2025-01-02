@@ -1,13 +1,218 @@
 <script>
+  import { onMount } from 'svelte';
+  import Chart from 'chart.js/auto';
+  import { getComparisonData, countryInfo } from '../lib/countryData';
+
   export let selectedCountry;
   export let closePopup;
   export let activeCategory = 'overview';
+  
+  // Karşılaştırma modu için state'ler
+  let compareMode = false;
+  let comparedCountry = null;
+  let comparisonCategory = 'economy';
+  let chart = null;
+  let timelineChart = null;
+
+  // DOM elementleri için referanslar
+  let chartCanvas;
+  let timelineCanvas;
+
+  // Grafik renkleri
+  const chartColors = {
+    primary: 'rgba(26, 35, 126, 0.7)',
+    secondary: 'rgba(13, 71, 161, 0.7)',
+    border: {
+      primary: 'rgb(26, 35, 126)',
+      secondary: 'rgb(13, 71, 161)'
+    }
+  };
+
+  // Ekonomik trend grafiğini oluştur
+  function createEconomicTrendChart() {
+    if (chart) chart.destroy();
+    
+    const ctx = chartCanvas.getContext('2d');
+    const data = selectedCountry.data.economicData.gdpTrend;
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map(d => d.year),
+        datasets: [
+          {
+            label: 'GSYİH (Milyar $)',
+            data: data.map(d => d.gdp),
+            borderColor: chartColors.border.primary,
+            backgroundColor: chartColors.primary,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Büyüme (%)',
+            data: data.map(d => d.growth),
+            borderColor: chartColors.border.secondary,
+            backgroundColor: chartColors.secondary,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: {
+              display: true,
+              text: 'GSYİH (Milyar $)'
+            }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Büyüme (%)'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Zaman çizelgesi grafiğini oluştur
+  function createTimelineChart() {
+    if (timelineChart) timelineChart.destroy();
+
+    const ctx = timelineCanvas.getContext('2d');
+    const timeline = selectedCountry.data.timeline;
+    const categories = ['political', 'economic', 'military', 'social'];
+    
+    const datasets = categories.map((category, index) => ({
+      label: category.charAt(0).toUpperCase() + category.slice(1),
+      data: timeline
+        .filter(event => event.category === category)
+        .map(event => ({
+          x: event.year,
+          y: index,
+          event: event.event,
+          description: event.description
+        })),
+      pointStyle: 'circle',
+      pointRadius: 8,
+      pointHoverRadius: 12
+    }));
+
+    timelineChart = new Chart(ctx, {
+      type: 'scatter',
+      data: { datasets },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            ticks: {
+              callback: function(value) {
+                return categories[value]?.charAt(0).toUpperCase() + categories[value]?.slice(1);
+              }
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const point = context.raw;
+                return `${point.event}: ${point.description}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Karşılaştırma grafiğini oluştur
+  function createComparisonChart() {
+    if (!comparedCountry) return;
+    
+    if (chart) chart.destroy();
+    
+    const compData = getComparisonData(
+      selectedCountry.name,
+      comparedCountry.name,
+      comparisonCategory
+    );
+
+    if (!compData) return;
+
+    const ctx = chartCanvas.getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: compData.labels,
+        datasets: compData.datasets.map((dataset, index) => ({
+          ...dataset,
+          backgroundColor: index === 0 ? chartColors.primary : chartColors.secondary,
+          borderColor: index === 0 ? chartColors.border.primary : chartColors.border.secondary,
+          borderWidth: 1
+        }))
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  // Karşılaştırma modunu aç/kapa
+  function toggleCompareMode() {
+    compareMode = !compareMode;
+    if (!compareMode) {
+      comparedCountry = null;
+      createEconomicTrendChart();
+    }
+  }
+
+  // Karşılaştırılacak ülkeyi seç
+  function selectComparedCountry(country) {
+    comparedCountry = country;
+    createComparisonChart();
+  }
+
+  // Karşılaştırma kategorisini değiştir
+  function changeComparisonCategory(category) {
+    comparisonCategory = category;
+    if (comparedCountry) {
+      createComparisonChart();
+    }
+  }
+
+  onMount(() => {
+    createEconomicTrendChart();
+    createTimelineChart();
+  });
 </script>
 
 {#if selectedCountry}
   <div class="modern-popup">
     <div class="popup-header">
       <button class="close-button" on:click={closePopup}>×</button>
+      <button class="compare-button" on:click={toggleCompareMode}>
+        {compareMode ? 'Karşılaştırmayı Kapat' : 'Ülke Karşılaştır'}
+      </button>
     </div>
     
     <!-- Ana Bilgi Kartı -->
@@ -37,10 +242,34 @@
       </div>
     </div>
 
+    <!-- Karşılaştırma Modu -->
+    {#if compareMode}
+      <div class="comparison-controls">
+        <select bind:value={comparisonCategory}>
+          <option value="economy">Ekonomi</option>
+          <option value="military">Askeri</option>
+          <option value="demographics">Demografi</option>
+          <option value="geography">Coğrafya</option>
+        </select>
+        
+        <select bind:value={comparedCountry}>
+          <option value={null}>Ülke Seçin</option>
+          {#each Object.entries(countryInfo) as [name, data]}
+            {#if name !== selectedCountry.name}
+              <option value={{ name, data }}>{name}</option>
+            {/if}
+          {/each}
+        </select>
+      </div>
+    {/if}
+
     <!-- Kategori Seçici -->
     <div class="category-selector">
       <button class:active={activeCategory === 'overview'} on:click={() => activeCategory = 'overview'}>
         Genel Bakış
+      </button>
+      <button class:active={activeCategory === 'timeline'} on:click={() => activeCategory = 'timeline'}>
+        Zaman Çizelgesi
       </button>
       <button class:active={activeCategory === 'demographics'} on:click={() => activeCategory = 'demographics'}>
         Demografi
@@ -53,9 +282,6 @@
       </button>
       <button class:active={activeCategory === 'geography'} on:click={() => activeCategory = 'geography'}>
         Coğrafya
-      </button>
-      <button class:active={activeCategory === 'innovation'} on:click={() => activeCategory = 'innovation'}>
-        İnovasyon
       </button>
     </div>
 
@@ -96,6 +322,55 @@
             <div class="card-details">
               <span class="card-title">Para Birimi</span>
               <span class="card-value">{selectedCountry.data.general.currency}</span>
+            </div>
+          </div>
+        </div>
+
+      {:else if activeCategory === 'timeline'}
+        <div class="timeline-container">
+          <canvas bind:this={timelineCanvas}></canvas>
+          <div class="timeline-legend">
+            <div class="legend-item">
+              <span class="dot political"></span>
+              <span>Siyasi</span>
+            </div>
+            <div class="legend-item">
+              <span class="dot economic"></span>
+              <span>Ekonomik</span>
+            </div>
+            <div class="legend-item">
+              <span class="dot military"></span>
+              <span>Askeri</span>
+            </div>
+            <div class="legend-item">
+              <span class="dot social"></span>
+              <span>Sosyal</span>
+            </div>
+          </div>
+        </div>
+
+      {:else if activeCategory === 'economy'}
+        <div class="chart-container">
+          <canvas bind:this={chartCanvas}></canvas>
+        </div>
+        <div class="economic-indicators">
+          <h3>Temel Ekonomik Göstergeler</h3>
+          <div class="indicators-grid">
+            <div class="indicator-card">
+              <span class="indicator-label">İhracat</span>
+              <span class="indicator-value">{selectedCountry.data.economicData.keyIndicators.exportValue}</span>
+            </div>
+            <div class="indicator-card">
+              <span class="indicator-label">İthalat</span>
+              <span class="indicator-value">{selectedCountry.data.economicData.keyIndicators.importValue}</span>
+            </div>
+            <div class="indicator-card">
+              <span class="indicator-label">Yabancı Yatırım</span>
+              <span class="indicator-value">{selectedCountry.data.economicData.keyIndicators.foreignInvestment}</span>
+            </div>
+            <div class="indicator-card">
+              <span class="indicator-label">İşsizlik</span>
+              <span class="indicator-value">{selectedCountry.data.economicData.keyIndicators.unemployment}</span>
             </div>
           </div>
         </div>
@@ -149,59 +424,6 @@
             <div class="card-details">
               <span class="card-title">Etnik Gruplar</span>
               <span class="card-value">{selectedCountry.data.demographics.ethnicGroups.join(', ')}</span>
-            </div>
-          </div>
-        </div>
-
-      {:else if activeCategory === 'economy'}
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="card-icon">💰</div>
-            <div class="card-details">
-              <span class="card-title">GSYİH</span>
-              <span class="card-value">{selectedCountry.data.economy.gdp}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">📈</div>
-            <div class="card-details">
-              <span class="card-title">GSYİH Sıralaması</span>
-              <span class="card-value">{selectedCountry.data.economy.gdpRank}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">📊</div>
-            <div class="card-details">
-              <span class="card-title">Büyüme</span>
-              <span class="card-value">{selectedCountry.data.economy.gdpGrowth}</span>
-            </div>
-          </div>
-          <div class="info-card full-width">
-            <div class="card-icon">🏭</div>
-            <div class="card-details">
-              <span class="card-title">Ana Sektörler</span>
-              <span class="card-value">{selectedCountry.data.economy.majorSectors.join(', ')}</span>
-            </div>
-          </div>
-          <div class="info-card full-width">
-            <div class="card-icon">🤝</div>
-            <div class="card-details">
-              <span class="card-title">Ticaret Ortakları</span>
-              <span class="card-value">{selectedCountry.data.trade.tradingPartners.join(', ')}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">📤</div>
-            <div class="card-details">
-              <span class="card-title">Ana İhracat</span>
-              <span class="card-value">{selectedCountry.data.trade.mainExports.join(', ')}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">📥</div>
-            <div class="card-details">
-              <span class="card-title">Ana İthalat</span>
-              <span class="card-value">{selectedCountry.data.trade.mainImports.join(', ')}</span>
             </div>
           </div>
         </div>
@@ -304,52 +526,6 @@
             </div>
           </div>
         </div>
-
-      {:else if activeCategory === 'innovation'}
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="card-icon">💡</div>
-            <div class="card-details">
-              <span class="card-title">Patent Sayısı</span>
-              <span class="card-value">{selectedCountry.data.innovation.patents}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">🚀</div>
-            <div class="card-details">
-              <span class="card-title">Startup Ekosistemi</span>
-              <span class="card-value">{selectedCountry.data.innovation.startupEcosystem}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">📊</div>
-            <div class="card-details">
-              <span class="card-title">Ar-Ge Harcamaları</span>
-              <span class="card-value">{selectedCountry.data.innovation.rAndDSpending}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">🎓</div>
-            <div class="card-details">
-              <span class="card-title">Üniversite Sayısı</span>
-              <span class="card-value">{selectedCountry.data.education.universities}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">👨‍🎓</div>
-            <div class="card-details">
-              <span class="card-title">Öğrenci Nüfusu</span>
-              <span class="card-value">{selectedCountry.data.education.studentPopulation}</span>
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">📚</div>
-            <div class="card-details">
-              <span class="card-title">Akademik Yayın</span>
-              <span class="card-value">{selectedCountry.data.education.researchOutput}</span>
-            </div>
-          </div>
-        </div>
       {/if}
     </div>
   </div>
@@ -371,10 +547,122 @@
   }
 
   .popup-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    z-index: 1;
+  }
+
+  .compare-button {
+    background: rgba(26, 35, 126, 0.8);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .compare-button:hover {
+    background: rgba(26, 35, 126, 1);
+    transform: translateY(-1px);
+  }
+
+  .comparison-controls {
+    padding: 16px;
+    background: #f5f5f5;
+    display: flex;
+    gap: 12px;
+  }
+
+  .comparison-controls select {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+  }
+
+  .chart-container {
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    margin: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .timeline-container {
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    margin: 16px;
+  }
+
+  .timeline-legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .dot.political { background: #1a237e; }
+  .dot.economic { background: #0d47a1; }
+  .dot.military { background: #2e7d32; }
+  .dot.social { background: #c62828; }
+
+  .economic-indicators {
+    padding: 20px;
+  }
+
+  .indicators-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .indicator-card {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .indicator-label {
+    font-size: 14px;
+    color: #666;
+  }
+
+  .indicator-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1a237e;
+  }
+
+  .popup-header {
     position: absolute;
     top: 10px;
     right: 10px;
     z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .close-button {
