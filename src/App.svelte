@@ -26,7 +26,11 @@
       [-90, -180],
       [90, 180]
     ],
-    maxBoundsViscosity: 1.0
+    maxBoundsViscosity: 1.0,
+    zoomAnimation: false,
+    fadeAnimation: false,
+    markerZoomAnimation: false,
+    preferCanvas: true
   };
 
   const getBaseStyle = () => ({
