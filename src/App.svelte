@@ -789,4 +789,48 @@
     z-index: 2;
   }
   /* Aurora efekti */
-  :global(body.neofuturistic) .
+  :global(body.neofuturistic) .map::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(64, 220, 255, 0.05) 0%,
+      rgba(64, 220, 255, 0.0) 50%,
+      rgba(64, 220, 255, 0.05) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+    animation: aurora 10s linear infinite;
+  }
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  @keyframes flicker {
+    0%, 100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  @keyframes aurora {
+    0% {
+      transform: translateY(-10%);
+    }
+    50% {
+      transform: translateY(10%);
+    }
+    100% {
+      transform: translateY(-10%);
+    }
+  }
+</style>
