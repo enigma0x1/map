@@ -50,6 +50,16 @@
         zoomOffset: -1,
         className: 'retro-map-tiles'
       }
+    },
+    neofuturistic: {
+      url: 'https://basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+      attribution: '&copy; CartoDB',
+      options: {
+        maxZoom: 18,
+        tileSize: 512,
+        zoomOffset: -1,
+        className: 'neofuturistic-map-tiles'
+      }
     }
   };
   const getBaseStyle = () => ({
@@ -153,12 +163,10 @@
     if (mapInitialized) return;
     const L = await import('leaflet');
     map = L.map(mapElement, mapOptions);
-    // Retro base map
-    L.tileLayer(themeOptions.retro.url, {
-      maxZoom: 18,
-      attribution: themeOptions.retro.attribution,
-      className: themeOptions.retro.options.className
-    }).addTo(map);
+    
+    // Başlangıç temasını ayarla
+    L.tileLayer(themeOptions[currentTheme].url, themeOptions[currentTheme].options).addTo(map);
+    
     // Canvas renderer
     const canvasRenderer = L.canvas();
     try {
@@ -228,6 +236,19 @@
   };
   function handleThemeChange(theme) {
     currentTheme = theme;
+    if (map) {
+      // Mevcut tile layer'ı kaldır
+      map.eachLayer((layer) => {
+        if (layer instanceof L.TileLayer) {
+          map.removeLayer(layer);
+        }
+      });
+      // Yeni tema için tile layer ekle
+      L.tileLayer(themeOptions[theme].url, themeOptions[theme].options).addTo(map);
+      
+      // Tema değişikliğine göre stil güncelleme
+      document.body.className = theme;
+    }
   }
   const toggleSidebar = () => {
     isSidebarOpen = !isSidebarOpen;
@@ -306,6 +327,9 @@
             <h3>Map Settings</h3>
             <button class="sidebar-btn" on:click={() => handleThemeChange('retro')}>
               Retro Theme
+            </button>
+            <button class="sidebar-btn" on:click={() => handleThemeChange('neofuturistic')}>
+              Neo-Futuristic Theme
             </button>
             <button class="sidebar-btn" on:click={() => map.setZoom(2)}>
               Reset Zoom
@@ -592,5 +616,56 @@
     height: 8px;
     border-radius: 50%;
     display: inline-block;
+  }
+  /* Neo-fütüristik tema için stiller */
+  :global(body.neofuturistic) .compact-nav {
+    background: rgba(16, 24, 32, 0.95);
+    border-bottom: 1px solid rgba(0, 195, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 195, 255, 0.1);
+  }
+
+  :global(body.neofuturistic) .compact-nav h1 {
+    color: #fff;
+  }
+
+  :global(body.neofuturistic) .alliance-btn {
+    background: rgba(16, 24, 32, 0.9);
+    border: 1px solid rgba(0, 195, 255, 0.3);
+    color: #00c3ff;
+    backdrop-filter: blur(5px);
+  }
+
+  :global(body.neofuturistic) .alliance-btn:hover {
+    background: rgba(0, 195, 255, 0.1);
+    border-color: #00c3ff;
+  }
+
+  :global(body.neofuturistic) .alliance-btn.active {
+    background: rgba(0, 195, 255, 0.2);
+    border-color: #00c3ff;
+    box-shadow: 0 0 15px rgba(0, 195, 255, 0.3);
+  }
+
+  :global(body.neofuturistic) .country-highlight {
+    filter: drop-shadow(0 0 8px rgba(0, 195, 255, 0.5));
+  }
+
+  :global(body.neofuturistic) .country-tooltip {
+    background: rgba(16, 24, 32, 0.9) !important;
+    border: 1px solid rgba(0, 195, 255, 0.3) !important;
+    color: #00c3ff !important;
+    backdrop-filter: blur(5px);
+  }
+
+  :global(body.neofuturistic) .continent-label {
+    color: rgba(0, 195, 255, 0.7);
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    text-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
+  }
+  :global(body.neofuturistic) .spinner {
+    border: 4px solid rgba(16, 24, 32, 0.3);
+    border-top: 4px solid #00c3ff;
+    box-shadow: 0 0 15px rgba(0, 195, 255, 0.3);
   }
 </style>
