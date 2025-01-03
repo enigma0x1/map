@@ -52,7 +52,7 @@
       }
     },
     neofuturistic: {
-      url: 'https://basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+      url: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
       attribution: '&copy; CartoDB',
       options: {
         maxZoom: 18,
@@ -63,11 +63,12 @@
     }
   };
   const getBaseStyle = () => ({
-    fillColor: 'transparent',
-    fillOpacity: 0,
-    color: '#5C2E0E',
-    opacity: 0.6,
-    weight: 1.2
+    fillColor: currentTheme === 'neofuturistic' ? '#1a2333' : 'transparent',
+    fillOpacity: currentTheme === 'neofuturistic' ? 0.3 : 0,
+    color: currentTheme === 'neofuturistic' ? '#40dcff' : '#5C2E0E',
+    opacity: currentTheme === 'neofuturistic' ? 0.4 : 0.6,
+    weight: currentTheme === 'neofuturistic' ? 1 : 1.2,
+    className: currentTheme === 'neofuturistic' ? 'neon-border' : ''
   });
   const getHighlightStyle = () => ({
     fillColor: '#A0522D',
@@ -101,6 +102,39 @@
           className: 'continent-label',
           html: `<div>${continent.name}</div>`
         })
+      }).addTo(map);
+    });
+  };
+  const addCityLights = (map) => {
+    const cities = [
+      { name: "New York", coords: [40.7128, -74.0060], size: 8 },
+      { name: "London", coords: [51.5074, -0.1278], size: 7 },
+      { name: "Tokyo", coords: [35.6762, 139.6503], size: 8 },
+      { name: "Paris", coords: [48.8566, 2.3522], size: 7 },
+      { name: "Shanghai", coords: [31.2304, 121.4737], size: 8 },
+      { name: "Dubai", coords: [25.2048, 55.2708], size: 6 },
+      { name: "Singapore", coords: [1.3521, 103.8198], size: 6 },
+      { name: "Hong Kong", coords: [22.3193, 114.1694], size: 7 },
+      { name: "Moscow", coords: [55.7558, 37.6173], size: 7 },
+      { name: "Istanbul", coords: [41.0082, 28.9784], size: 6 },
+      // Daha fazla şehir ekleyebilirsiniz
+    ];
+
+    cities.forEach(city => {
+      // Işık efekti
+      L.circle(city.coords, {
+        radius: 50000,
+        className: 'city-glow',
+        stroke: false,
+        fillOpacity: 0.5
+      }).addTo(map);
+
+      // Merkez nokta
+      L.circle(city.coords, {
+        radius: 20000,
+        className: 'city-center',
+        stroke: false,
+        fillOpacity: 0.8
       }).addTo(map);
     });
   };
@@ -188,6 +222,9 @@
       console.error('Error initializing map:', error);
     }
     addContinentLabels(map);
+    if (currentTheme === 'neofuturistic') {
+      addCityLights(map);
+    }
     // Özel attribution ekleme
     L.control.attribution({
       prefix: false,
@@ -248,6 +285,15 @@
       
       // Tema değişikliğine göre stil güncelleme
       document.body.className = theme;
+      if (theme === 'neofuturistic') {
+        addCityLights(map);
+      } else {
+        map.eachLayer(layer => {
+          if (layer instanceof L.Circle) {
+            map.removeLayer(layer);
+          }
+        });
+      }
     }
   }
   const toggleSidebar = () => {
@@ -264,7 +310,7 @@
   });
 </script>
 <svelte:head>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
 </svelte:head>
 <nav class="compact-nav">
   <div class="nav-left">
@@ -617,55 +663,152 @@
     border-radius: 50%;
     display: inline-block;
   }
-  /* Neo-fütüristik tema için stiller */
+  /* Neo-fütüristik tema için güncellenmiş stiller */
+  :global(body.neofuturistic) {
+    background: #0a0f18;
+    color: #ffffff;
+  }
+
   :global(body.neofuturistic) .compact-nav {
-    background: rgba(16, 24, 32, 0.95);
-    border-bottom: 1px solid rgba(0, 195, 255, 0.2);
-    box-shadow: 0 2px 8px rgba(0, 195, 255, 0.1);
+    background: rgba(10, 15, 24, 0.85);
+    border-bottom: 1px solid rgba(64, 220, 255, 0.2);
+    box-shadow: 0 2px 15px rgba(64, 220, 255, 0.15);
+    backdrop-filter: blur(10px);
   }
 
   :global(body.neofuturistic) .compact-nav h1 {
     color: #fff;
+    text-shadow: 0 0 10px rgba(64, 220, 255, 0.5);
   }
 
   :global(body.neofuturistic) .alliance-btn {
-    background: rgba(16, 24, 32, 0.9);
-    border: 1px solid rgba(0, 195, 255, 0.3);
-    color: #00c3ff;
+    background: rgba(10, 15, 24, 0.9);
+    border: 1px solid rgba(64, 220, 255, 0.3);
+    color: #40dcff;
     backdrop-filter: blur(5px);
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(64, 220, 255, 0.1);
+    transition: all 0.3s ease;
   }
 
   :global(body.neofuturistic) .alliance-btn:hover {
-    background: rgba(0, 195, 255, 0.1);
-    border-color: #00c3ff;
+    background: rgba(64, 220, 255, 0.15);
+    border-color: #40dcff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(64, 220, 255, 0.2);
   }
 
   :global(body.neofuturistic) .alliance-btn.active {
-    background: rgba(0, 195, 255, 0.2);
-    border-color: #00c3ff;
-    box-shadow: 0 0 15px rgba(0, 195, 255, 0.3);
+    background: rgba(64, 220, 255, 0.2);
+    border-color: #40dcff;
+    box-shadow: 0 0 20px rgba(64, 220, 255, 0.3), 
+                inset 0 0 10px rgba(64, 220, 255, 0.2);
   }
 
   :global(body.neofuturistic) .country-highlight {
-    filter: drop-shadow(0 0 8px rgba(0, 195, 255, 0.5));
+    filter: drop-shadow(0 0 15px rgba(64, 220, 255, 0.5));
   }
 
   :global(body.neofuturistic) .country-tooltip {
-    background: rgba(16, 24, 32, 0.9) !important;
-    border: 1px solid rgba(0, 195, 255, 0.3) !important;
-    color: #00c3ff !important;
+    background: rgba(10, 15, 24, 0.95) !important;
+    border: 1px solid rgba(64, 220, 255, 0.3) !important;
+    color: #40dcff !important;
     backdrop-filter: blur(5px);
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    padding: 8px 12px;
+    font-weight: 500;
   }
 
   :global(body.neofuturistic) .continent-label {
-    color: rgba(0, 195, 255, 0.7);
+    color: rgba(64, 220, 255, 0.8);
     font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    text-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 15px rgba(64, 220, 255, 0.4);
   }
+
+  :global(body.neofuturistic) .sidebar {
+    background: rgba(10, 15, 24, 0.95);
+    border-right: 1px solid rgba(64, 220, 255, 0.2);
+    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  :global(body.neofuturistic) .sidebar-btn {
+    background: rgba(64, 220, 255, 0.1);
+    border: 1px solid rgba(64, 220, 255, 0.3);
+    color: #40dcff;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  :global(body.neofuturistic) .sidebar-btn:hover {
+    background: rgba(64, 220, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(64, 220, 255, 0.2);
+  }
+
+  /* Özel scrollbar */
+  :global(body.neofuturistic) ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  :global(body.neofuturistic) ::-webkit-scrollbar-track {
+    background: rgba(10, 15, 24, 0.9);
+  }
+
+  :global(body.neofuturistic) ::-webkit-scrollbar-thumb {
+    background: rgba(64, 220, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  :global(body.neofuturistic) ::-webkit-scrollbar-thumb:hover {
+    background: rgba(64, 220, 255, 0.5);
+  }
+
+  /* Loader animasyonu */
+  :global(body.neofuturistic) .loader {
+    background: rgba(10, 15, 24, 0.9);
+    border: 1px solid rgba(64, 220, 255, 0.3);
+    box-shadow: 0 0 30px rgba(64, 220, 255, 0.2);
+  }
+
   :global(body.neofuturistic) .spinner {
-    border: 4px solid rgba(16, 24, 32, 0.3);
-    border-top: 4px solid #00c3ff;
-    box-shadow: 0 0 15px rgba(0, 195, 255, 0.3);
+    border: 3px solid rgba(64, 220, 255, 0.1);
+    border-top: 3px solid #40dcff;
+    box-shadow: 0 0 20px rgba(64, 220, 255, 0.3);
   }
-</style>
+  /* Neo-fütüristik gece efektleri */
+  :global(body.neofuturistic) .city-glow {
+    fill: rgba(64, 220, 255, 0.15);
+    filter: blur(10px);
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  :global(body.neofuturistic) .city-center {
+    fill: rgba(64, 220, 255, 0.8);
+    filter: blur(2px);
+    animation: flicker 2s ease-in-out infinite;
+  }
+
+  /* Atmosfer efekti */
+  :global(body.neofuturistic) .map::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(64, 220, 255, 0.05) 0%,
+      rgba(10, 15, 24, 0.2) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Aurora efekti */
+  :global(body.neofuturistic) .map::
