@@ -3,7 +3,8 @@
   import 'leaflet/dist/leaflet.css';
   import { fade, slide } from 'svelte/transition';
   // Veri setlerini içe aktar
-  import { categories, membershipData, countryInfo } from './lib/WorldOrganizations.svelte';
+  import { categories, membershipData } from './lib/WorldOrganizations.svelte';
+  import { countryInfo, comparisonCategories, getComparisonData } from './lib/countryData.js';
   import CountryPopup from './components/CountryPopup.svelte';
   // Değişkenler
   let map;
