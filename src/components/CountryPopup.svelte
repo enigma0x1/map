@@ -6,18 +6,16 @@
   export let selectedCountry;
   export let closePopup;
   export let activeCategory = 'overview';
-  
+
   // Karşılaştırma modu için state'ler
   let compareMode = false;
   let comparedCountry = null;
   let comparisonCategory = 'economy';
   let chart = null;
   let timelineChart = null;
-
   // DOM elementleri için referanslar
   let chartCanvas;
   let timelineCanvas;
-
   // Grafik renkleri
   const chartColors = {
     primary: 'rgba(26, 35, 126, 0.7)',
@@ -27,14 +25,12 @@
       secondary: 'rgb(13, 71, 161)'
     }
   };
-
   // Ekonomik trend grafiğini oluştur
   function createEconomicTrendChart() {
     if (chart) chart.destroy();
     
     const ctx = chartCanvas.getContext('2d');
     const data = selectedCountry.data.economicData.gdpTrend;
-
     chart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -88,11 +84,9 @@
       }
     });
   }
-
   // Zaman çizelgesi grafiğini oluştur
   function createTimelineChart() {
     if (timelineChart) timelineChart.destroy();
-
     const ctx = timelineCanvas.getContext('2d');
     const timeline = selectedCountry.data.timeline;
     const categories = ['political', 'economic', 'military', 'social'];
@@ -111,7 +105,6 @@
       pointRadius: 8,
       pointHoverRadius: 12
     }));
-
     timelineChart = new Chart(ctx, {
       type: 'scatter',
       data: { datasets },
@@ -139,7 +132,6 @@
       }
     });
   }
-
   // Karşılaştırma grafiğini oluştur
   function createComparisonChart() {
     if (!comparedCountry) return;
@@ -151,9 +143,7 @@
       comparedCountry.name,
       comparisonCategory
     );
-
     if (!compData) return;
-
     const ctx = chartCanvas.getContext('2d');
     chart = new Chart(ctx, {
       type: 'bar',
@@ -176,7 +166,6 @@
       }
     });
   }
-
   // Karşılaştırma modunu aç/kapa
   function toggleCompareMode() {
     compareMode = !compareMode;
@@ -185,13 +174,13 @@
       createEconomicTrendChart();
     }
   }
-
   // Karşılaştırılacak ülkeyi seç
   function selectComparedCountry(country) {
     comparedCountry = country;
-    createComparisonChart();
+    if (comparedCountry) {
+      createComparisonChart();
+    }
   }
-
   // Karşılaştırma kategorisini değiştir
   function changeComparisonCategory(category) {
     comparisonCategory = category;
@@ -199,13 +188,14 @@
       createComparisonChart();
     }
   }
-
   onMount(() => {
     createEconomicTrendChart();
     createTimelineChart();
   });
+  $: if (compareMode && comparedCountry) {
+    createComparisonChart();
+  }
 </script>
-
 {#if selectedCountry}
   <div class="modern-popup">
     <div class="popup-header">
@@ -234,25 +224,23 @@
           <p>{selectedCountry.data.president.bio}</p>
         </div>
       </div>
-
       <div class="alliance-tags">
         {#each selectedCountry.data.alliances as alliance}
           <span class="tag">{alliance}</span>
         {/each}
       </div>
     </div>
-
     <!-- Karşılaştırma Modu -->
     {#if compareMode}
       <div class="comparison-controls">
-        <select bind:value={comparisonCategory}>
+        <select bind:value={comparisonCategory} on:change={() => changeComparisonCategory(comparisonCategory)}>
           <option value="economy">Ekonomi</option>
           <option value="military">Askeri</option>
           <option value="demographics">Demografi</option>
           <option value="geography">Coğrafya</option>
         </select>
         
-        <select bind:value={comparedCountry}>
+        <select bind:value={comparedCountry} on:change={() => selectComparedCountry(comparedCountry)}>
           <option value={null}>Ülke Seçin</option>
           {#each Object.entries(countryInfo) as [name, data]}
             {#if name !== selectedCountry.name}
@@ -262,7 +250,6 @@
         </select>
       </div>
     {/if}
-
     <!-- Kategori Seçici -->
     <div class="category-selector">
       <button class:active={activeCategory === 'overview'} on:click={() => activeCategory = 'overview'}>
@@ -284,7 +271,6 @@
         Coğrafya
       </button>
     </div>
-
     <!-- Dinamik İçerik Alanı -->
     <div class="content-area">
       {#if activeCategory === 'overview'}
@@ -325,7 +311,6 @@
             </div>
           </div>
         </div>
-
       {:else if activeCategory === 'timeline'}
         <div class="timeline-container">
           <canvas bind:this={timelineCanvas}></canvas>
@@ -348,7 +333,6 @@
             </div>
           </div>
         </div>
-
       {:else if activeCategory === 'economy'}
         <div class="chart-container">
           <canvas bind:this={chartCanvas}></canvas>
@@ -374,7 +358,6 @@
             </div>
           </div>
         </div>
-
       {:else if activeCategory === 'demographics'}
         <div class="info-grid">
           <div class="info-card">
@@ -427,7 +410,6 @@
             </div>
           </div>
         </div>
-
       {:else if activeCategory === 'military'}
         <div class="info-grid">
           <div class="info-card full-width">
@@ -480,7 +462,6 @@
             </div>
           </div>
         </div>
-
       {:else if activeCategory === 'geography'}
         <div class="info-grid">
           <div class="info-card">
@@ -530,7 +511,6 @@
     </div>
   </div>
 {/if}
-
 <style>
   .modern-popup {
     position: fixed;
@@ -545,14 +525,12 @@
     flex-direction: column;
     z-index: 9999;
   }
-
   .popup-header {
     display: flex;
     justify-content: space-between;
     padding: 10px;
     z-index: 1;
   }
-
   .compare-button {
     background: rgba(26, 35, 126, 0.8);
     color: white;
@@ -563,19 +541,16 @@
     font-size: 14px;
     transition: all 0.2s ease;
   }
-
   .compare-button:hover {
     background: rgba(26, 35, 126, 1);
     transform: translateY(-1px);
   }
-
   .comparison-controls {
     padding: 16px;
     background: #f5f5f5;
     display: flex;
     gap: 12px;
   }
-
   .comparison-controls select {
     flex: 1;
     padding: 8px;
@@ -583,7 +558,6 @@
     border-radius: 4px;
     background: white;
   }
-
   .chart-container {
     padding: 20px;
     background: white;
@@ -591,49 +565,41 @@
     margin: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
-
   .timeline-container {
     padding: 20px;
     background: white;
     border-radius: 12px;
     margin: 16px;
   }
-
   .timeline-legend {
     display: flex;
     justify-content: center;
     gap: 20px;
     margin-top: 16px;
   }
-
   .legend-item {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-
   .dot {
     width: 12px;
     height: 12px;
     border-radius: 50%;
   }
-
   .dot.political { background: #1a237e; }
   .dot.economic { background: #0d47a1; }
   .dot.military { background: #2e7d32; }
   .dot.social { background: #c62828; }
-
   .economic-indicators {
     padding: 20px;
   }
-
   .indicators-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
     margin-top: 16px;
   }
-
   .indicator-card {
     background: white;
     padding: 16px;
@@ -643,18 +609,15 @@
     flex-direction: column;
     gap: 8px;
   }
-
   .indicator-label {
     font-size: 14px;
     color: #666;
   }
-
   .indicator-value {
     font-size: 16px;
     font-weight: 500;
     color: #1a237e;
   }
-
   .popup-header {
     position: absolute;
     top: 10px;
@@ -664,7 +627,6 @@
     justify-content: space-between;
     align-items: center;
   }
-
   .close-button {
     background: rgba(255, 255, 255, 0.2);
     border: none;
@@ -679,44 +641,37 @@
     justify-content: center;
     transition: all 0.2s ease;
   }
-
   .close-button:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
   }
-
   .main-info-card {
     padding: 24px;
     background: linear-gradient(135deg, #1a237e, #0d47a1);
     color: white;
   }
-
   .country-header {
     display: flex;
     align-items: center;
     gap: 16px;
     margin-bottom: 20px;
   }
-
   .flag-container {
     width: 60px;
     height: 40px;
     overflow: hidden;
     border-radius: 4px;
   }
-
   .flag-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
   .country-header h1 {
     margin: 0;
     font-size: 24px;
     font-weight: 600;
   }
-
   .president-section {
     display: flex;
     align-items: center;
@@ -727,13 +682,11 @@
     margin: 16px 0;
     transition: all 0.3s ease;
   }
-
   .president-section:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     background: rgba(255, 255, 255, 0.15);
   }
-
   .president-image {
     width: 80px;
     height: 80px;
@@ -741,37 +694,31 @@
     overflow: hidden;
     border: 3px solid rgba(255, 255, 255, 0.3);
   }
-
   .president-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-
   .president-info {
     flex: 1;
   }
-
   .president-info h2 {
     margin: 0;
     font-size: 18px;
     font-weight: 500;
   }
-
   .president-info p {
     margin: 8px 0 0;
     font-size: 14px;
     opacity: 0.9;
     line-height: 1.4;
   }
-
   .alliance-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 16px;
   }
-
   .tag {
     padding: 4px 12px;
     background: rgba(255, 255, 255, 0.2);
@@ -779,7 +726,6 @@
     font-size: 12px;
     font-weight: 500;
   }
-
   .category-selector {
     display: flex;
     overflow-x: auto;
@@ -787,7 +733,6 @@
     gap: 8px;
     background: #f5f5f5;
   }
-
   .category-selector button {
     padding: 8px 16px;
     border: none;
@@ -799,24 +744,20 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
-
   .category-selector button.active {
     background: #1a237e;
     color: white;
   }
-
   .content-area {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
   }
-
   .info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
-
   .info-card {
     background: white;
     border-radius: 12px;
@@ -827,51 +768,41 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
   }
-
   .info-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
-
   .info-card.full-width {
     grid-column: 1 / -1;
   }
-
   .card-icon {
     font-size: 24px;
     color: #1a237e;
   }
-
   .card-details {
     display: flex;
     flex-direction: column;
   }
-
   .card-title {
     font-size: 14px;
     color: #666;
   }
-
   .card-value {
     font-size: 16px;
     font-weight: 500;
     color: #333;
   }
-
   /* Scrollbar stilleri */
   .content-area::-webkit-scrollbar {
     width: 8px;
   }
-
   .content-area::-webkit-scrollbar-track {
     background: #f1f1f1;
   }
-
   .content-area::-webkit-scrollbar-thumb {
     background: #888;
     border-radius: 4px;
   }
-
   .content-area::-webkit-scrollbar-thumb:hover {
     background: #555;
   }
