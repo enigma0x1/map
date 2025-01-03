@@ -119,7 +119,6 @@
       { name: "Istanbul", coords: [41.0082, 28.9784], size: 6 },
       // Daha fazla şehir ekleyebilirsiniz
     ];
-
     cities.forEach(city => {
       // Işık efekti
       L.circle(city.coords, {
@@ -128,7 +127,6 @@
         stroke: false,
         fillOpacity: 0.5
       }).addTo(map);
-
       // Merkez nokta
       L.circle(city.coords, {
         radius: 20000,
@@ -668,19 +666,16 @@
     background: #0a0f18;
     color: #ffffff;
   }
-
   :global(body.neofuturistic) .compact-nav {
     background: rgba(10, 15, 24, 0.85);
     border-bottom: 1px solid rgba(64, 220, 255, 0.2);
     box-shadow: 0 2px 15px rgba(64, 220, 255, 0.15);
     backdrop-filter: blur(10px);
   }
-
   :global(body.neofuturistic) .compact-nav h1 {
     color: #fff;
     text-shadow: 0 0 10px rgba(64, 220, 255, 0.5);
   }
-
   :global(body.neofuturistic) .alliance-btn {
     background: rgba(10, 15, 24, 0.9);
     border: 1px solid rgba(64, 220, 255, 0.3);
@@ -690,25 +685,21 @@
     box-shadow: 0 0 15px rgba(64, 220, 255, 0.1);
     transition: all 0.3s ease;
   }
-
   :global(body.neofuturistic) .alliance-btn:hover {
     background: rgba(64, 220, 255, 0.15);
     border-color: #40dcff;
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(64, 220, 255, 0.2);
   }
-
   :global(body.neofuturistic) .alliance-btn.active {
     background: rgba(64, 220, 255, 0.2);
     border-color: #40dcff;
     box-shadow: 0 0 20px rgba(64, 220, 255, 0.3), 
                 inset 0 0 10px rgba(64, 220, 255, 0.2);
   }
-
   :global(body.neofuturistic) .country-highlight {
     filter: drop-shadow(0 0 15px rgba(64, 220, 255, 0.5));
   }
-
   :global(body.neofuturistic) .country-tooltip {
     background: rgba(10, 15, 24, 0.95) !important;
     border: 1px solid rgba(64, 220, 255, 0.3) !important;
@@ -719,7 +710,6 @@
     padding: 8px 12px;
     font-weight: 500;
   }
-
   :global(body.neofuturistic) .continent-label {
     color: rgba(64, 220, 255, 0.8);
     font-family: 'Inter', sans-serif;
@@ -728,14 +718,12 @@
     letter-spacing: 1px;
     text-shadow: 0 0 15px rgba(64, 220, 255, 0.4);
   }
-
   :global(body.neofuturistic) .sidebar {
     background: rgba(10, 15, 24, 0.95);
     border-right: 1px solid rgba(64, 220, 255, 0.2);
     box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
   }
-
   :global(body.neofuturistic) .sidebar-btn {
     background: rgba(64, 220, 255, 0.1);
     border: 1px solid rgba(64, 220, 255, 0.3);
@@ -743,38 +731,31 @@
     border-radius: 8px;
     transition: all 0.3s ease;
   }
-
   :global(body.neofuturistic) .sidebar-btn:hover {
     background: rgba(64, 220, 255, 0.2);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(64, 220, 255, 0.2);
   }
-
   /* Özel scrollbar */
   :global(body.neofuturistic) ::-webkit-scrollbar {
     width: 8px;
   }
-
   :global(body.neofuturistic) ::-webkit-scrollbar-track {
     background: rgba(10, 15, 24, 0.9);
   }
-
   :global(body.neofuturistic) ::-webkit-scrollbar-thumb {
     background: rgba(64, 220, 255, 0.3);
     border-radius: 4px;
   }
-
   :global(body.neofuturistic) ::-webkit-scrollbar-thumb:hover {
     background: rgba(64, 220, 255, 0.5);
   }
-
   /* Loader animasyonu */
   :global(body.neofuturistic) .loader {
     background: rgba(10, 15, 24, 0.9);
     border: 1px solid rgba(64, 220, 255, 0.3);
     box-shadow: 0 0 30px rgba(64, 220, 255, 0.2);
   }
-
   :global(body.neofuturistic) .spinner {
     border: 3px solid rgba(64, 220, 255, 0.1);
     border-top: 3px solid #40dcff;
@@ -786,13 +767,11 @@
     filter: blur(10px);
     animation: pulse 4s ease-in-out infinite;
   }
-
   :global(body.neofuturistic) .city-center {
     fill: rgba(64, 220, 255, 0.8);
     filter: blur(2px);
     animation: flicker 2s ease-in-out infinite;
   }
-
   /* Atmosfer efekti */
   :global(body.neofuturistic) .map::after {
     content: '';
@@ -809,6 +788,5 @@
     pointer-events: none;
     z-index: 2;
   }
-
   /* Aurora efekti */
-  :global(body.neofuturistic) .map::
+  :global(body.neofuturistic) .
